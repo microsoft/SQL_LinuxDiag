@@ -10,10 +10,10 @@
 [forks badge]:https://img.shields.io/github/forks/Microsoft/DiagManager.svg
 [issues badge]:https://img.shields.io/github/issues/Microsoft/DiagManager.svg
 
-[licence]:https://github.com/microsoft/DiagManager/blob/master/license.md
-[stars]:https://github.com/Microsoft/DiagManager/stargazers
-[forks]:https://github.com/Microsoft/DiagManager/network
-[issues]:https://github.com/Microsoft/DiagManager/issues
+[licence]:https://github.com/microsoft/SQL_LinuxDiag/blob/master/license.md
+[stars]:https://github.com/Microsoft/SQL_LinuxDiag/stargazers
+[forks]:https://github.com/Microsoft/SQL_LinuxDiag/network
+[issues]:https://github.com/Microsoft/SQL_LinuxDiag/issues
 
 This utility is a set of Bash scripts designed to streamline the collection of diagnostic logs from SQL Server instances running on Linux. It simplifies troubleshooting by gathering essential system and SQL Server data, enabling faster resolution of technical incidents in collaboration with Microsoft support (CSS).
 
