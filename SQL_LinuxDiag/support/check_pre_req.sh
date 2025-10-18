@@ -77,7 +77,7 @@ fi
 #Check version
 #check if curl exists, in case running inside container
 if ( command -v curl 2>&1 >/dev/null ); then 
-	publish_script_version=$(curl -s -m 15 https://raw.githubusercontent.com/microsoft/SQL_LinuxDiag/refs/heads/master/SQl_LinuxDiag/support/linuxdiag_support_functions.sh | grep 'script_version=' | sed -e s/^script_version=// | tr -d "\"") 
+	publish_script_version=$(curl -s -m 15 https://raw.githubusercontent.com/microsoft/SQL_LinuxDiag/refs/heads/main/SQL_LinuxDiag/support/linuxdiag_support_functions.sh | grep 'script_version=' | sed -e s/^script_version=// | tr -d "\"") 
 	publish_script_version=${publish_script_version:-0}
 	publish_version_s=$(date -d "${publish_script_version}" +'%s')
 	current_version_s=$(date -d "${script_version}" +'%s')
