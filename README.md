@@ -6,9 +6,9 @@
 [![issues badge]][issues]
 
 [licence badge]:https://img.shields.io/badge/license-MIT-blue.svg
-[stars badge]:https://img.shields.io/github/stars/Microsoft/DiagManager.svg
-[forks badge]:https://img.shields.io/github/forks/Microsoft/DiagManager.svg
-[issues badge]:https://img.shields.io/github/issues/Microsoft/DiagManager.svg
+[stars badge]:https://img.shields.io/github/stars/Microsoft/SQL_LinuxDiag.svg
+[forks badge]:https://img.shields.io/github/forks/Microsoft/SQL_LinuxDiag.svg
+[issues badge]:https://img.shields.io/github/issues/Microsoft/SQL_LinuxDiag.svg
 
 [licence]:https://github.com/microsoft/SQL_LinuxDiag/blob/master/license.md
 [stars]:https://github.com/Microsoft/SQL_LinuxDiag/stargazers
