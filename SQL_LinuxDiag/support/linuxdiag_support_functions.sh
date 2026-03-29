@@ -238,10 +238,11 @@ get_servicemanager_and_sqlservicestatus()
 	servicemanager="unknown"
 	sqlservicestatus="unknown"
 
-	get_container_instance_status
 	get_host_instance_status
+	get_container_instance_status
 	linuxdiag_inside_container_get_instance_status
 
+  #Check if sql is running in host 
 	if [[ "${1}" == "host_instance" ]] && [[ "${is_host_instance_service_installed}" == "YES" ]]; then
 		if [[ ${is_host_instance_process_running} == "YES" ]]; then
 			sqlservicestatus="active"
@@ -251,11 +252,6 @@ get_servicemanager_and_sqlservicestatus()
 			servicemanager="systemd"
 		fi
 	fi
-	
-	#Check if sql is started by supervisor
-	if [[ "${1}" == "host_instance" ]] && [[ "${sqlservicestatus}" == "unknown" ]]; then
-		supervisorctl status mssql-server >/dev/null 2>&1 && { sqlservicestatus="active"; servicemanager="supervisord"; } || { sqlservicestatus="unknown"; servicemanager="unknown"; }	
-	fi
 
 	#Check if sql is running in docker
 	if [[ "${1}" == "container_instance" ]] && [[ ! -z "$(docker ps -q --filter name=${2})" ]]; then
@@ -263,15 +259,12 @@ get_servicemanager_and_sqlservicestatus()
 		servicemanager="docker"
 	fi
 
-	#Check if we are runing in kubernetes pod or inside container, sql parent process should have PID=1
-	#first check, we should have no systemd
-	if (! echo "$(readlink /sbin/init)" | grep systemd >/dev/null 2>&1); then
-		#starting sql process is 1
-		if [[ "$(ps -C sqlservr -o pid= | head -n 1 | tr -d ' ')" == "1" ]]; then
-			sqlservicestatus="active"
-			servicemanager="none"
-		fi
-	fi
+  if is_instance_inside_container_active == "YES" ; then
+    sqlservicestatus="active"
+    servicemanager="unknown"
+  fi
+
+
 }
 
 
