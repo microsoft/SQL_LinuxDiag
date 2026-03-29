@@ -175,41 +175,40 @@ linuxdiag_inside_container_get_instance_status()
 
     # Block 3. SQL engine detection.
 
-    # Check 3a. Standard SQL Server container image path.
-    if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/sqlservr'; then
-        is_instance_inside_container_active="YES"
-
-        # Decide runtime type using simple, ordered checks.
-        # Prefer Podman marker over Docker marker.
-        if [ -f /run/.containerenv ]; then
-            instance_inside_container_deployment_type="PODMAN"
-            return 0
-        fi
-
-        if [ -f /.dockerenv ]; then
-            instance_inside_container_deployment_type="DOCKER"
-            return 0
-        fi
-
-        # If we get here, we know we are in a container context but could not prove the exact runtime.
-        instance_inside_container_deployment_type="CONTAINER"
-        return 0
+    # Check 3a. Kubernetes wrapper script path (check first - most specific).
+    kubernetes_type="$(ps -eo pid=,command= | awk '/\/bin\/bash.*launch_sqlservr\.sh.*sqlservr/ {print $1; exit}')"
+    if [ -n "$kubernetes_type" ]; then
+      is_instance_inside_container_active="YES"
+      instance_inside_container_deployment_type="KUBERNETES"
+      return 0
     fi
 
-    # Check 3b. Kubernetes wrapper script path.
-    if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/launch_sqlservr.sh'; then
-        is_instance_inside_container_active="YES"
-        instance_inside_container_deployment_type="KUBERNETES"
-        return 0
+    # Check 3b. SQL MI Arc style process name.
+    miaa_type="$(ps -eo pid=,command= | awk '/\/opt\/mssql-miaa-agent\/MiaaAgent/ {print $1; exit}')"
+    if [ -n "$miaa_type" ]; then
+      is_instance_inside_container_active="YES"
+      instance_inside_container_deployment_type="SQLMI_ARC"
+      return 0
     fi
 
-    # Check 3c. SQL MI Arc style process name.
-    if ps -eo args 2>/dev/null | grep -Eaq '(^|[[:space:]]|/)\.?sqlservr([[:space:]]|$)'; then
-        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql-miaa-agent/MiaaAgent'; then
-            is_instance_inside_container_active="YES"
-            instance_inside_container_deployment_type="SQLMI_ARC"
-            return 0
-        fi
+    # Check 3c. Standard SQL Server container image path (check last - least specific).
+    # Match sqlservr but NOT if it's part of the Kubernetes wrapper command
+    container_type="$(ps -eo pid=,command= | awk '/\/opt\/mssql\/bin\/sqlservr/ && !/launch_sqlservr\.sh/ {print $1; exit}')"
+    if [ -n "$container_type" ]; then
+      is_instance_inside_container_active="YES"
+        
+      # If we get here, we know we are in a container context but could not prove the exact runtime.
+      instance_inside_container_deployment_type="UNDETECTED_TYPE"
+
+      # Decide runtime type using simple, ordered checks.
+      # Prefer Podman marker over Docker marker.
+      if [ -f /run/.containerenv ]; then
+        instance_inside_container_deployment_type="PODMAN"
+      fi
+      if [ -f /.dockerenv ]; then
+         instance_inside_container_deployment_type="DOCKER"
+      fi
+      return 0
     fi
 
     return 0
