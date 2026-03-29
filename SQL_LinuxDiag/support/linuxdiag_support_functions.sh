@@ -259,11 +259,10 @@ get_servicemanager_and_sqlservicestatus()
 		servicemanager="docker"
 	fi
 
-  if is_instance_inside_container_active == "YES" ; then
+  if [[ "${is_instance_inside_container_active}" == "YES" ]] ; then
     sqlservicestatus="active"
     servicemanager="unknown"
   fi
-
 
 }
 
