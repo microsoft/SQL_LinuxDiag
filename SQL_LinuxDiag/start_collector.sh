@@ -518,7 +518,7 @@ logger "Validating run scenario, environment and prerequisites" "info_blue" "1" 
 
 #Check if the variable is set
 if [[ -n "$scenario" ]]; then
-    CONFIG_FILE="./scenarios/${scenario}"
+    CONFIG_FILE="${scenario}"
     if [[ -f "$CONFIG_FILE" ]]; then
 		logger "Validating scenario file $CONFIG_FILE" "info" "1" "1" "${linuxdiag_log:-/dev/null}"  "${0##*/}" 
         validate_scenario_file "$CONFIG_FILE"
