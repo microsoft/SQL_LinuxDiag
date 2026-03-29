@@ -173,42 +173,39 @@ linuxdiag_inside_container_get_instance_status()
         return 0
     fi
 
-    # Block 2. Container or pod marker gate.
-    # Add libpod to improve Podman detection when /run/.containerenv is missing.
-    if [ -f /.dockerenv ] || [ -f /run/.containerenv ] || grep -qaE '(docker|containerd|kubepods|crio|libpod)' /proc/1/cgroup 2>/dev/null; then
+    # Block 3. SQL engine detection.
 
-        # Block 3. SQL engine detection.
+    # Check 3a. Standard SQL Server container image path.
+    if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/sqlservr'; then
+        is_instance_inside_container_active="YES"
 
-        # Check 3a. Standard SQL Server container image path.
-        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/sqlservr'; then
-            is_instance_inside_container_active="YES"
-
-            # Decide runtime type using simple, ordered checks.
-            # Prefer Podman marker over Docker marker.
-            if [ -f /run/.containerenv ]; then
-                instance_inside_container_deployment_type="PODMAN"
-                return 0
-            fi
-
-            if [ -f /.dockerenv ]; then
-                instance_inside_container_deployment_type="DOCKER"
-                return 0
-            fi
-
-            # If we get here, we know we are in a container context but could not prove the exact runtime.
-            instance_inside_container_deployment_type="CONTAINER"
+        # Decide runtime type using simple, ordered checks.
+        # Prefer Podman marker over Docker marker.
+        if [ -f /run/.containerenv ]; then
+            instance_inside_container_deployment_type="PODMAN"
             return 0
         fi
 
-        # Check 3b. Kubernetes wrapper script path.
-        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/launch_sqlservr.sh'; then
-            is_instance_inside_container_active="YES"
-            instance_inside_container_deployment_type="KUBERNETES"
+        if [ -f /.dockerenv ]; then
+            instance_inside_container_deployment_type="DOCKER"
             return 0
         fi
 
-        # Check 3c. SQL MI Arc style process name.
-        if ps -eo args 2>/dev/null | grep -Eaq '(^|[[:space:]]|/)\.?sqlservr([[:space:]]|$)'; then
+        # If we get here, we know we are in a container context but could not prove the exact runtime.
+        instance_inside_container_deployment_type="CONTAINER"
+        return 0
+    fi
+
+    # Check 3b. Kubernetes wrapper script path.
+    if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/launch_sqlservr.sh'; then
+        is_instance_inside_container_active="YES"
+        instance_inside_container_deployment_type="KUBERNETES"
+        return 0
+    fi
+
+    # Check 3c. SQL MI Arc style process name.
+    if ps -eo args 2>/dev/null | grep -Eaq '(^|[[:space:]]|/)\.?sqlservr([[:space:]]|$)'; then
+        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql-miaa-agent/MiaaAgent'; then
             is_instance_inside_container_active="YES"
             instance_inside_container_deployment_type="SQLMI_ARC"
             return 0
