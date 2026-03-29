@@ -44,18 +44,11 @@ fi
 
 # home directory check , we do not want linuxdiag to run from home, xel will fail if we run from home.
 current_dir="${PWD}"
-USER_LOGIN=$(logname 2>/dev/null || true)
-if [[ -n "${USER_LOGIN}" ]]; then
-	USER_HOME=$(eval echo ~"${USER_LOGIN}")
-else
-	USER_HOME=""
-fi
-
-# If user home cannot be resolved or does not exist, allow collection to continue.
-if [[ -n "${USER_HOME}" ]] && [[ -d "${USER_HOME}" ]] && [[ "${current_dir}" == "${USER_HOME}" || "${current_dir}" == "${USER_HOME}/"* ]]; then
-	home_directory_check=1
-else
+USER_HOME=$(eval echo ~"$(logname 2>/dev/null)")
+if [[ "${current_dir}" == "${USER_HOME}"* ]] && [[ "$is_instance_inside_container_active" == "NO" ]]; then
 	home_directory_check=0
+else
+	home_directory_check=1
 fi
 if [[ "$home_directory_check" == 0 ]]
 	then
