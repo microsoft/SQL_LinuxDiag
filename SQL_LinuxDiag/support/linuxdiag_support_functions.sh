@@ -164,16 +164,60 @@ get_container_instance_status()
 #when linuxdiag is running inside, kubernetes, pod or container. get the status
 linuxdiag_inside_container_get_instance_status()
 {
-	is_instance_inside_container_active="NO"
-	#Check if we are runing in kubernetes pod or inside container, sql parent process should have PID=1
-	#first check, we should have no systemd
-	if (! echo "$(readlink /sbin/init)" | grep systemd >/dev/null 2>&1); then
-		#starting sql process is 1
-		if [[ "$(ps -C sqlservr -o pid= | head -n 1 | tr -d ' ')" == "1" ]]; then
-			is_instance_inside_container_active="YES"
-		fi
-	fi
+    # Default result.
+    is_instance_inside_container_active="NO"
+    instance_inside_container_deployment_type="NONE"
+
+    # Block 1. Host OS guard.
+    if [ -r /proc/1/comm ] && grep -qi '^systemd$' /proc/1/comm; then
+        return 0
+    fi
+
+    # Block 2. Container or pod marker gate.
+    # Add libpod to improve Podman detection when /run/.containerenv is missing.
+    if [ -f /.dockerenv ] || [ -f /run/.containerenv ] || grep -qaE '(docker|containerd|kubepods|crio|libpod)' /proc/1/cgroup 2>/dev/null; then
+
+        # Block 3. SQL engine detection.
+
+        # Check 3a. Standard SQL Server container image path.
+        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/sqlservr'; then
+            is_instance_inside_container_active="YES"
+
+            # Decide runtime type using simple, ordered checks.
+            # Prefer Podman marker over Docker marker.
+            if [ -f /run/.containerenv ]; then
+                instance_inside_container_deployment_type="PODMAN"
+                return 0
+            fi
+
+            if [ -f /.dockerenv ]; then
+                instance_inside_container_deployment_type="DOCKER"
+                return 0
+            fi
+
+            # If we get here, we know we are in a container context but could not prove the exact runtime.
+            instance_inside_container_deployment_type="CONTAINER"
+            return 0
+        fi
+
+        # Check 3b. Kubernetes wrapper script path.
+        if ps -eo args 2>/dev/null | grep -aq '/opt/mssql/bin/launch_sqlservr.sh'; then
+            is_instance_inside_container_active="YES"
+            instance_inside_container_deployment_type="KUBERNETES"
+            return 0
+        fi
+
+        # Check 3c. SQL MI Arc style process name.
+        if ps -eo args 2>/dev/null | grep -Eaq '(^|[[:space:]]|/)\.?sqlservr([[:space:]]|$)'; then
+            is_instance_inside_container_active="YES"
+            instance_inside_container_deployment_type="SQLMI_ARC"
+            return 0
+        fi
+    fi
+
+    return 0
 }
+
 
 #Check if we are running inside WSL
 get_wsl_instance_status()
