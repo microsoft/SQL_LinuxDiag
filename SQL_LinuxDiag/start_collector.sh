@@ -518,7 +518,7 @@ logger "Validating run scenario, environment and prerequisites" "info_blue" "1" 
 
 #Check if the variable is set
 if [[ -n "$scenario" ]]; then
-    CONFIG_FILE="./scenarios/${scenario}"
+    CONFIG_FILE="${scenario}"
     if [[ -f "$CONFIG_FILE" ]]; then
 		logger "Validating scenario file $CONFIG_FILE" "info" "1" "1" "${linuxdiag_log:-/dev/null}"  "${0##*/}" 
         validate_scenario_file "$CONFIG_FILE"
@@ -625,6 +625,7 @@ logger "Using sql podman containers? ${is_podman_sql_containers}" "info" "0" "1"
 logger "Using sql podman containers without docker engine? ${is_podman_sql_containers_no_docker_runtime}" "info" "0" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
 #linuxdiag_inside_container_get_instance_status
 logger "Running inside container? ${is_instance_inside_container_active}" "info" "0" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Container deployment type: ${instance_inside_container_deployment_type}" "info" "0" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
 logger "Running inside WSL? ${is_host_instance_inside_wsl}" "info" "0" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
 logger "WSL version? ${wsl_version}" "info" "0" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
 #Check OS build info

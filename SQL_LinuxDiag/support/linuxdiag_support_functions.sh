@@ -164,16 +164,56 @@ get_container_instance_status()
 #when linuxdiag is running inside, kubernetes, pod or container. get the status
 linuxdiag_inside_container_get_instance_status()
 {
-	is_instance_inside_container_active="NO"
-	#Check if we are runing in kubernetes pod or inside container, sql parent process should have PID=1
-	#first check, we should have no systemd
-	if (! echo "$(readlink /sbin/init)" | grep systemd >/dev/null 2>&1); then
-		#starting sql process is 1
-		if [[ "$(ps -C sqlservr -o pid= | head -n 1 | tr -d ' ')" == "1" ]]; then
-			is_instance_inside_container_active="YES"
-		fi
-	fi
+    # Default result.
+    is_instance_inside_container_active="NO"
+    instance_inside_container_deployment_type="NONE"
+
+    # Block 1. Host OS guard.
+    if [ -r /proc/1/comm ] && grep -qi '^systemd$' /proc/1/comm; then
+        return 0
+    fi
+
+    # Block 3. SQL engine detection.
+
+    # Check 3a. Kubernetes wrapper script path (check first - most specific).
+    kubernetes_type="$(ps -eo pid=,command= | awk '/\/bin\/bash.*launch_sqlservr\.sh.*sqlservr/ {print $1; exit}')"
+    if [ -n "$kubernetes_type" ]; then
+      is_instance_inside_container_active="YES"
+      instance_inside_container_deployment_type="KUBERNETES"
+      return 0
+    fi
+
+    # Check 3b. SQL MI Arc style process name.
+    miaa_type="$(ps -eo pid=,command= | awk '/\/opt\/mssql-miaa-agent\/MiaaAgent/ {print $1; exit}')"
+    if [ -n "$miaa_type" ]; then
+      is_instance_inside_container_active="YES"
+      instance_inside_container_deployment_type="SQLMI_ARC"
+      return 0
+    fi
+
+    # Check 3c. Standard SQL Server container image path (check last - least specific).
+    # Match sqlservr but NOT if it's part of the Kubernetes wrapper command
+    container_type="$(ps -eo pid=,command= | awk '/\/opt\/mssql\/bin\/sqlservr/ && !/launch_sqlservr\.sh/ {print $1; exit}')"
+    if [ -n "$container_type" ]; then
+      is_instance_inside_container_active="YES"
+        
+      # If we get here, we know we are in a container context but could not prove the exact runtime.
+      instance_inside_container_deployment_type="UNDETECTED_TYPE"
+
+      # Decide runtime type using simple, ordered checks.
+      # Prefer Podman marker over Docker marker.
+      if [ -f /run/.containerenv ]; then
+        instance_inside_container_deployment_type="PODMAN"
+      fi
+      if [ -f /.dockerenv ]; then
+         instance_inside_container_deployment_type="DOCKER"
+      fi
+      return 0
+    fi
+
+    return 0
 }
+
 
 #Check if we are running inside WSL
 get_wsl_instance_status()
@@ -198,10 +238,11 @@ get_servicemanager_and_sqlservicestatus()
 	servicemanager="unknown"
 	sqlservicestatus="unknown"
 
-	get_container_instance_status
 	get_host_instance_status
+	get_container_instance_status
 	linuxdiag_inside_container_get_instance_status
 
+  #Check if sql is running in host 
 	if [[ "${1}" == "host_instance" ]] && [[ "${is_host_instance_service_installed}" == "YES" ]]; then
 		if [[ ${is_host_instance_process_running} == "YES" ]]; then
 			sqlservicestatus="active"
@@ -211,11 +252,6 @@ get_servicemanager_and_sqlservicestatus()
 			servicemanager="systemd"
 		fi
 	fi
-	
-	#Check if sql is started by supervisor
-	if [[ "${1}" == "host_instance" ]] && [[ "${sqlservicestatus}" == "unknown" ]]; then
-		supervisorctl status mssql-server >/dev/null 2>&1 && { sqlservicestatus="active"; servicemanager="supervisord"; } || { sqlservicestatus="unknown"; servicemanager="unknown"; }	
-	fi
 
 	#Check if sql is running in docker
 	if [[ "${1}" == "container_instance" ]] && [[ ! -z "$(docker ps -q --filter name=${2})" ]]; then
@@ -223,15 +259,11 @@ get_servicemanager_and_sqlservicestatus()
 		servicemanager="docker"
 	fi
 
-	#Check if we are runing in kubernetes pod or inside container, sql parent process should have PID=1
-	#first check, we should have no systemd
-	if (! echo "$(readlink /sbin/init)" | grep systemd >/dev/null 2>&1); then
-		#starting sql process is 1
-		if [[ "$(ps -C sqlservr -o pid= | head -n 1 | tr -d ' ')" == "1" ]]; then
-			sqlservicestatus="active"
-			servicemanager="none"
-		fi
-	fi
+  if [[ "${is_instance_inside_container_active}" == "YES" ]] ; then
+    sqlservicestatus="active"
+    servicemanager="unknown"
+  fi
+
 }
 
 
