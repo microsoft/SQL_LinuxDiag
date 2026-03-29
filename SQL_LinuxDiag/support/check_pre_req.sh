@@ -44,13 +44,20 @@ fi
 
 # home directory check , we do not want linuxdiag to run from home, xel will fail if we run from home.
 current_dir="${PWD}"
-USER_HOME=$(eval echo ~$(logname))
-if [[ "${current_dir}" == "${USER_HOME}"* ]]; then
+USER_LOGIN=$(logname 2>/dev/null || true)
+if [[ -n "${USER_LOGIN}" ]]; then
+	USER_HOME=$(eval echo ~"${USER_LOGIN}")
+else
+	USER_HOME=""
+fi
+
+# If user home cannot be resolved or does not exist, allow collection to continue.
+if [[ -n "${USER_HOME}" ]] && [[ -d "${USER_HOME}" ]] && [[ "${current_dir}" == "${USER_HOME}" || "${current_dir}" == "${USER_HOME}/"* ]]; then
 	home_directory_check=1
 else
 	home_directory_check=0
 fi
-if [[ "$home_directory_check" == 1 ]]
+if [[ "$home_directory_check" == 0 ]]
 	then
 		logger "Running LinuxDiag from home directory is not supported" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
 		logger "Please use another location, such as /tmp/linuxdiag" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
