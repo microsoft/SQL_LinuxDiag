@@ -15,6 +15,24 @@
 [forks]:https://github.com/Microsoft/SQL_LinuxDiag/network
 [issues]:https://github.com/Microsoft/SQL_LinuxDiag/issues
 
+
+- [SQL LinuxDiag](#sql-linuxdiag)
+- [Supported Products](#supported-products)
+- [Prerequisites](#prerequisites)
+- [Scenario Files and Usage Information](#scenario-files-and-usage-information)
+- [Authentication Modes](#authentication-modes)
+- [SQL LinuxDiag Scripts Arguments](#sql-linuxdiag-scripts-arguments)
+- [Downloading and Executing SQL LinuxDiag](#downloading-and-executing-sql-linuxdiag)
+  - [Downloading SQL LinuxDiag](#downloading-sql-linuxdiag)
+  - [Preparing SQL LinuxDiag for Execution](#preparing-sql-linuxdiag-for-execution)
+  - [Starting SQL LinuxDiag](#starting-sql-linuxdiag)
+  - [Stopping SQL LinuxDiag](#stopping-sql-linuxdiag)
+- [Capture logs from SQL Container Instance Deployed in Kubernetes](#capture-logs-from-sql-container-instance-deployed-in-kubernetes)
+  - [Starting SQL LinuxDiag](#starting-sql-linuxdiag-1)
+  - [Stopping SQL LinuxDiag](#stopping-sql-linuxdiag-1)
+- [License Agreement](#license-agreement)
+
+
 This utility is a set of Bash scripts designed to streamline the collection of diagnostic logs from SQL Server instances running on Linux. It simplifies troubleshooting by gathering essential system and SQL Server data, enabling faster resolution of technical incidents in collaboration with Microsoft support (CSS).
 
 This utility was created by Microsoft engineers to assist with diagnostic log collection when you are troubleshooting problems in Microsoft SQL Server.
