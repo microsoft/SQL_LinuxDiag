@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_version="20251001"
+script_version="20260501"
 MSSQL_CONF="/var/opt/mssql/mssql.conf"
 outputdir="$PWD/output"
 #SQL_LOG_DIR=${SQL_LOG_DIR:-"/var/opt/mssql/log"}
