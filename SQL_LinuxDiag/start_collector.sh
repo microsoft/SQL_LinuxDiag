@@ -590,8 +590,9 @@ cp ./support/sqllogscout*.conf $working_dir/output
 #get the user that started sqllogscout and save it to log file 
 if [ "$EUID" -eq 0 ]; then
     echo "ELEVATED_PERMISSIONS:YES" > "$outputdir/sqllogscout_intiated_as_user.log"
-	ORIGINAL_USERNAME=$(logname)
-  	ORIGINAL_GROUP=$(id -gn "$ORIGINAL_USERNAME")
+
+	ORIGINAL_USERNAME=$(logname 2>/dev/null) || ORIGINAL_USERNAME=""
+	ORIGINAL_GROUP=$(id -gn "$ORIGINAL_USERNAME" 2>/dev/null) || ORIGINAL_GROUP=""
 	chown "$ORIGINAL_USERNAME:$ORIGINAL_GROUP" "$outputdir/sqllogscout_intiated_as_user.log"
 	echo "USER:$ORIGINAL_USERNAME" >> "$outputdir/sqllogscout_intiated_as_user.log"
 else
