@@ -333,24 +333,24 @@ if [[ -z "$scenario" ]] && [[ "$is_instance_inside_container_active" == "NO" ]];
 
 		#Set the scenario variable based on user selection
 		if [[ ${scn_user_selected} == 1 ]]; then
-			scenario="./scenarios/scenario_static.scn"
+			scenario="scenario_static.scn"
 		fi
 		if [[ ${scn_user_selected} == 2 ]]; then
-			scenario="./scenarios/scenario_sql_perf_minimal.scn"
+			scenario="scenario_sql_perf_minimal.scn"
 		fi
 		if [[ ${scn_user_selected} == 3 ]]; then
-			scenario="./scenarios/scenario_sql_perf_lite.scn"
+			scenario="scenario_sql_perf_lite.scn"
 		fi
 		if [[ ${scn_user_selected} == 4 ]]; then
-			scenario="./scenarios/scenario_sql_perf_general.scn"
+			scenario="scenario_sql_perf_general.scn"
 		fi
 		if [[ ${scn_user_selected} == 5 ]]; then
-			scenario="./scenarios/scenario_sql_perf_detailed.scn"
+			scenario="scenario_sql_perf_detailed.scn"
 		fi
 		echo ""
 
 		#Check if scenario is set to one of the performance-impacting options
-		if [[ "$scenario" == "./scenarios/scenario_sql_perf_detailed.scn" ]]; then
+		if [[ "$scenario" == "scenario_sql_perf_detailed.scn" ]]; then
 	    echo -e "\033[0;31mAre you sure you want to use scenario: $scenario?\033[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
     	echo -e "\033[0;31mThis will collect performance data at the statement level, which may impact server performance due to overhead..\033[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
 
@@ -467,24 +467,24 @@ if [[ -z "$scenario" ]] && [[ "$is_instance_inside_container_active" == "YES" ]]
 		fi
 
 		if [[ ${scn_user_selected} == 1 ]]; then
-			scenario="./scenarios/scenario_static_kube.scn"
+			scenario="scenario_static_kube.scn"
 		fi
 		if [[ ${scn_user_selected} == 2 ]]; then
-			scenario="./scenarios/scenario_sql_perf_minimal_kube.scn"
+			scenario="scenario_sql_perf_minimal_kube.scn"
 		fi
 		if [[ ${scn_user_selected} == 3 ]]; then
-			scenario="./scenarios/scenario_sql_perf_lite_kube.scn"
+			scenario="scenario_sql_perf_lite_kube.scn"
 		fi
 		if [[ ${scn_user_selected} == 4 ]]; then
-			scenario="./scenarios/scenario_sql_perf_general_kube.scn"
+			scenario="scenario_sql_perf_general_kube.scn"
 		fi
 		if [[ ${scn_user_selected} == 5 ]]; then
-			scenario="./scenarios/scenario_sql_perf_detailed_kube.scn"
+			scenario="scenario_sql_perf_detailed_kube.scn"
 		fi
 		echo ""
 
 		#Check if scenario is set to one of the performance-impacting options
-		if [[ "$scenario" == "./scenarios/scenario_sql_perf_detailed_kube.scn" ]]; then
+		if [[ "$scenario" == "scenario_sql_perf_detailed_kube.scn" ]]; then
 	    echo -e "\033[0;31mAre you sure you want to use scenario: $scenario?\033[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
     	echo -e "\033[0;31mThis will collect performance data at the statement level, which may affect server performance due to overhead..\033[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
 
@@ -518,7 +518,7 @@ logger "Validating run scenario, environment and prerequisites" "info_blue" "1" 
 
 #Check if the variable is set
 if [[ -n "$scenario" ]]; then
-    CONFIG_FILE="${scenario}"
+    CONFIG_FILE="./scenarios/${scenario}"
     if [[ -f "$CONFIG_FILE" ]]; then
 		logger "Validating scenario file $CONFIG_FILE" "info" "1" "1" "${sqllogscout_log:-/dev/null}"  "${0##*/}" 
         validate_scenario_file "$CONFIG_FILE"
