@@ -1,4 +1,4 @@
-# SQL Logscout
+# SQL Logscout Linux
 
 [![licence badge]][licence]
 [![stars badge]][stars]
