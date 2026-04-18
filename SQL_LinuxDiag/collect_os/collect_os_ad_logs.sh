@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 # Arguments:
 #   1. Title
@@ -19,7 +19,7 @@ source ./support/linuxdiag_support_functions.sh
 #}
 
 #Starting the script
-logger "Starting host AD logs collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting host AD logs collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 if [[ -d "$1" ]] ; then
 	outputdir="$1"
 else
@@ -43,7 +43,7 @@ SYSLOGPATH=/var/log
 NOW=`date +"%m_%d_%Y"`
 
 if [ ! -e "/etc/krb5.conf" ]; then
-    logger "skipping collecting host AD logs there is no krb5.conf for host instance" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "skipping collecting host AD logs there is no krb5.conf for host instance" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 else
     linuxdistro=`cat /etc/os-release | grep -i '^ID=' | head -n1 | awk -F'=' '{print $2}' | sed 's/"//g'`
 
@@ -51,19 +51,19 @@ else
     infolog_filename=$outputdir/${HOSTNAME}_os_Kerberos.info
 
     # Capture resolv info
-    logger "Collecting resolv.conf information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting resolv.conf information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     capture_system_info_command "cat /etc/resolv.conf" "cat /etc/resolv.conf"
 
     # Capture realm info
-    logger "Collecting realms information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting realms information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     capture_system_info_command "realm list" "realm list"
 
     #Capture krb5.keytab klist information
-    logger "Collecting keytab klist information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting keytab klist information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     capture_system_info_command "klist -kte /etc/krb5.keytab" "klist -kte /etc/krb5.keytab"
 
     # Capture machine knvo info
-    logger "Collecting machine knvo information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting machine knvo information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     if [ "${linuxdistro}" == "sles" ];then
         capture_system_info_command "/usr/lib/mit/bin/kvno $(echo "${HOSTNAME}" | cut -d"." -f1)" "/usr/lib/mit/bin/kvno $(echo "${HOSTNAME}" | cut -d"." -f1)"
     else
@@ -74,11 +74,11 @@ else
     # we need to collect logs from host machine
     #Getting Krb5.conf and sssd.conf
     if [ -e "/etc/krb5.conf" ]; then
-        logger "Collecting krb5.conf file information host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting krb5.conf file information host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         cat /etc/krb5.conf > $outputdir/${HOSTNAME}_os_krb5.conf
     fi
     if [ -e "/etc/sssd/sssd.conf" ]; then
-        logger "Collecting sssd.conf file information host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting sssd.conf file information host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         cat /etc/sssd/sssd.conf > $outputdir/${HOSTNAME}_os_sssd.conf 2>/dev/null || true
     fi
 

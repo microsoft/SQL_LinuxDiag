@@ -1,5 +1,5 @@
 --This is an example query
--- If you need a custom TSQL collector place your queries in this file and enable the CUSTOM_COLLETOR=YES in linuxdiag_collector.conf, works only for sql_perf.scn type of scenarios.
+-- If you need a custom TSQL collector place your queries in this file and enable the CUSTOM_COLLETOR=YES in sqllogscout_collector.conf, works only for sql_perf.scn type of scenarios.
 /*
 examples:-
 
@@ -12,7 +12,7 @@ SET @runtime = GETDATE()
 SELECT CONVERT (varchar(30), getdate(), 121) as runtime, * FROM sys.dm_os_memory_clerks
 RAISERROR ('', 0, 1) WITH NOWAIT
 
--- if you want DMV to run in loop during LinuxDiag execution, below is an example that will in loop every 30 seconds, DO NOT use for complex TSQL Script that returns large resultset. 
+-- if you want DMV to run in loop during sqllogscout execution, below is an example that will in loop every 30 seconds, DO NOT use for complex TSQL Script that returns large resultset. 
 set nocount on
 DECLARE @runtime datetime
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 if [[ -d "$1" ]] ; then
 	outputdir="$1"
@@ -21,10 +21,10 @@ else
         fi
 fi
 
-linuxdiag_log="$outputdir/linuxdiag.log"
+sqllogscout_log="$outputdir/sqllogscout.log"
 
 # get container directive from config file
-CONFIG_FILE="./linuxdiag_collector.conf"
+CONFIG_FILE="./sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -37,13 +37,13 @@ if [ $COLLECT_CONTAINER == [Nn][Oo] ] ; then
      exit 0
 fi
 
-logger "Container log collection is enabled" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Container log collection is enabled" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 # detect if docker is installed on the system
 get_container_instance_status
 if [ "${is_container_runtime_service_active}" == "YES" ]; then
         # we need to iterate through all containers
-        logger "Collecting information about docker containers" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting information about docker containers" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
         echo "=======docker ps=======" >> $outputdir/${HOSTNAME}_os_docker_info
         docker ps --all --no-trunc >> $outputdir/${HOSTNAME}_os_docker_info
@@ -65,15 +65,15 @@ if [ "${is_container_runtime_service_active}" == "YES" ]; then
         for dockerid in $dockerid_col;
         do
         	dockername=$(docker inspect -f "{{.Name}}" $dockerid | tail -c +2)
-                logger "Collecting docker logs for container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting docker logs for container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 docker logs $dockerid >> $outputdir/${dockername}_container_instance_docker_logs.out > /dev/null 2>&1
         done;
 fi
 
 #if podman is being used with docker engine, collect some basic info
 if [[ ${is_podman_sql_containers} = "YES" ]]; then
-        logger "There are podman container instances with no docker service installed, sql logs will not be collected from these containers" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-        logger "Collecting information about podman containers" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "There are podman container instances with no docker service installed, sql logs will not be collected from these containers" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting information about podman containers" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
         echo "=======podman ps=======" >> $outputdir/${HOSTNAME}_os_podman_info
         podman ps --all --no-trunc >> $outputdir/${HOSTNAME}_os_podman_info
@@ -95,7 +95,7 @@ if [[ ${is_podman_sql_containers} = "YES" ]]; then
         for podmanid in $podman_col;
         do
         	podmanname=$(podman inspect -f "{{.Name}}" $podmanid | tail -c +1)
-                logger "Collecting podman logs for container instance $podmanname" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting podman logs for container instance $podmanname" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 podman logs $podmanid >> $outputdir/${podmanname}_container_instance_podman_logs.out > /dev/null 2>&1
         done;
 fi

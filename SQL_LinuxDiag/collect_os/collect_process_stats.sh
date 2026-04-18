@@ -2,10 +2,10 @@
 
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 #if inside container exit 0 
-linuxdiag_inside_container_get_instance_status
+sqllogscout_inside_container_get_instance_status
 if [ "${is_instance_inside_container_active}" == "YES" ]; then
     exit 0
 fi
@@ -25,6 +25,6 @@ fi
 date >> $outputdir/${HOSTNAME}_os_process_pidstat.perf
 
 LC_TIME=en_US.UTF-8 pidstat -d -h -I -u -w -r $OS_COUNTERS_INTERVAL >> $outputdir/${HOSTNAME}_os_process_pidstat.perf &
-printf "%s\n" "$!" >> $outputdir/linuxdiag_stoppids_os_collectors.log
+printf "%s\n" "$!" >> $outputdir/sqllogscout_stoppids_os_collectors.log
 
 exit 0

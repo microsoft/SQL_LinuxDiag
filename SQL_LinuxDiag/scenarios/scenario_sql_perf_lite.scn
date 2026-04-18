@@ -1,4 +1,4 @@
-# LinuxDiag scenario file.
+# sqllogscout scenario file.
 # Controls the collection type, collection levels, enable and disable individual collectors.
 # for consistency keep all settigns and thier values in CAPITAL letters.
 
@@ -120,20 +120,20 @@ CUSTOM_COLLECTOR=YES
 # Collect Extended Events, Set to YES to enable collection, or NO to disable.
 # COLLECTOR_TYPE=PERF
 COLLECT_EXTENDED_EVENTS=YES
-# Specify which template to use for Extended Events:  linuxdiag_xevent_lite, linuxdiag_xevent_general, linuxdiag_xevent_detailed
-EXTENDED_EVENT_TEMPLATE=linuxdiag_xevent_lite
+# Specify which template to use for Extended Events:  sqllogscout_xevent_lite, sqllogscout_xevent_general, sqllogscout_xevent_detailed
+EXTENDED_EVENT_TEMPLATE=sqllogscout_xevent_lite
 
 # Collect SQL Trace, Set to YES to enable collection, or NO to disable. this collector will be deprecated in the future 
 # COLLECTOR_TYPE=PERF
 COLLECT_SQL_TRACE=NO
-# Specify which template to use for SQL Trace: linuxdiag_trace_lite, linuxdiag_trace_general, linuxdiag_trace_detailed, linuxdiag_trace_replication
-SQL_TRACE_TEMPLATE=linuxdiag_trace_lite
+# Specify which template to use for SQL Trace: sqllogscout_trace_lite, sqllogscout_trace_general, sqllogscout_trace_detailed, sqllogscout_trace_replication
+SQL_TRACE_TEMPLATE=sqllogscout_trace_lite
 
 ################
 # Connectivity #
 ################
 
-# Specify the authentication mode to use for connecting to SQL instance, with NONE linuxdiag will ask which method to use, the case of multi-instance setup
+# Specify the authentication mode to use for connecting to SQL instance, with NONE sqllogscout will ask which method to use, the case of multi-instance setup
 # Valid values : SQL / AD / NONE
-# Do not change, this is set dynamically by LinuxDiag 
+# Do not change, this is set dynamically by sqllogscout 
 SQL_CONNECT_AUTH_MODE=SQL

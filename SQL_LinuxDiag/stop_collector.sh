@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 # function definitions
 
@@ -9,16 +9,16 @@ source ./support/linuxdiag_support_functions.sh
 sql_stop_xevent()
 {
         if [[ $COLLECT_EXTENDED_EVENTS == [Yy][eE][sS] ]]; then
-                logger "Stopping Extended events Collection if started" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/linuxdiag_xevent_stop.sql" -o"$outputdir/${1}_${2}_Stop_XECollection.log"
+                logger "Stopping Extended events Collection if started" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sqllogscout_xevent_stop.sql" -o"$outputdir/${1}_${2}_Stop_XECollection.log"
         fi
 }
 
 sql_stop_trace()
 {
         if [[ $COLLECT_SQL_TRACE == [Yy][eE][sS] ]]; then
-                logger "Stopping SQL Trace Collection if started" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/linuxdiag_trace_stop.sql" -o"$outputdir/${1}_${2}_Stop_TraceCollection.log"
+                logger "Stopping SQL Trace Collection if started" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sqllogscout_trace_stop.sql" -o"$outputdir/${1}_${2}_Stop_TraceCollection.log"
         fi
 }
 
@@ -26,28 +26,28 @@ sql_stop_trace()
 sql_collect_xevent()
 {
         if [[ $COLLECT_EXTENDED_EVENTS == [Yy][eE][sS] ]]; then
-                logger "Collecting Extended events" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                docker exec $1 sh -c "cd /tmp  && tar cf /tmp/sql_xevent.tar *linuxdiag_xevent*.xel "
+                logger "Collecting Extended events" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                docker exec $1 sh -c "cd /tmp  && tar cf /tmp/sql_xevent.tar *sqllogscout_xevent*.xel "
                 docker cp $1:/tmp/sql_xevent.tar ${outputdir}/${2}_${3}_sql_xevent.tar | 2>/dev/null
                 docker exec $1 sh -c "rm -f /tmp/sql_xevent.tar"
-                docker exec $1 sh -c "cd /tmp  && rm -f *linuxdiag_xevent*.xel"
+                docker exec $1 sh -c "cd /tmp  && rm -f *sqllogscout_xevent*.xel"
         fi
 }
 #this is only used for container scenario
 sql_collect_trace()
 {
         if [[ $COLLECT_SQL_TRACE == [Yy][eE][sS] ]]; then
-                logger "Collecting SQL Trace" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                docker exec $1 sh -c "cd /tmp  && tar cf /tmp/sql_trace.tar *linuxdiag_trace*.trc "
+                logger "Collecting SQL Trace" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                docker exec $1 sh -c "cd /tmp  && tar cf /tmp/sql_trace.tar *sqllogscout_trace*.trc "
                 docker cp $1:/tmp/sql_trace.tar ${outputdir}/${2}_${3}_sql_trace.tar | 2>/dev/null
-                docker exec $1 sh -c "cd /tmp  && rm -f *linuxdiag_trace*.trc"
+                docker exec $1 sh -c "cd /tmp  && rm -f *sqllogscout_trace*.trc"
         fi
 }
 
 sql_collect_alwayson()
 {
         if [[ $COLLECT_SQL_HA_LOGS == [Yy][eE][sS] ]]; then
-                logger "Collecting SQL AlwaysOn configuration at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL AlwaysOn configuration at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_alwaysondiagscript.sql" -o"$outputdir/${1}_${2}_SQL_AlwaysOnDiag_Shutdown.out"
         fi
 }
@@ -55,7 +55,7 @@ sql_collect_alwayson()
 sql_collect_querystore()
 {
         if [[ $COLLECT_QUERY_STORE == [Yy][eE][sS] ]]; then
-                logger "Collecting SQL Query Store information at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Query Store information at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_querystore.sql" -o"$outputdir/${1}_${2}_SQL_QueryStore_Shutdown.out"
         fi
 }
@@ -63,7 +63,7 @@ sql_collect_querystore()
 sql_collect_perfstats_snapshot()
 {
         if [[ $COLLECT_PERFSTATS_SNAPSHOT == [Yy][eE][sS] ]] ; then
-                logger "Collecting SQL Perf Stats Snapshot at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Perf Stats Snapshot at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_perf_stats_snapshot.sql" -o"$outputdir/${1}_${2}_SQL_Perf_Stats_Snapshot_Shutdown.out"
         fi
 }
@@ -71,13 +71,13 @@ sql_collect_perfstats_snapshot()
 sql_collect_config()
 {
 	if [[ $COLLECT_SQL_CONFIG == [Yy][eE][sS] ]] ; then
-                logger "Collecting SQL Configuration Snapshot at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Configuration Snapshot at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_configuration.sql" -o"$outputdir/${1}_${2}_SQL_Configuration_Shutdown.out"
 
-                logger "Collecting SQL traces information at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL traces information at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_active_profiler_xe_traces.sql" -o"$outputdir/${1}_${2}_SQL_ActiveProfilerXeventTraces.out"
 
-                logger "Collecting SQL MiscDiag information at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL MiscDiag information at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_miscdiaginfo.sql" -o"$outputdir/${1}_${2}_SQL_MiscDiagInfo.out"
         fi
 }
@@ -85,7 +85,7 @@ sql_collect_config()
 sql_collect_linux_snapshot()
 {
         if [[ $COLLECT_PERFSTATS_SNAPSHOT == [Yy][eE][sS] ]] ; then
-                logger "Collecting SQL Linux Perf Stats Snapshot at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Linux Perf Stats Snapshot at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 "$SQLCMD" -S$SQL_SERVER_NAME $CONN_AUTH_OPTIONS -C -i"./collect_tsql/sql_linux_perf_stats_snapshot.sql" -o"$outputdir/${1}_${2}_SQL_Linux_Perf_Stats_Snapshot_Shutdown.out"
         fi
 }
@@ -93,7 +93,7 @@ sql_collect_linux_snapshot()
 sql_collect_databases_disk_map()
 {
         if [[ $COLLECT_SQL_CONFIG == [Yy][eE][sS] ]] ; then
-                logger "Collecting SQL Databases Disk Map information at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Databases Disk Map information at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 ./collect_sql/collect_sql_database_disk_map.sh "$SQL_SERVER_NAME" "$CONN_AUTH_OPTIONS" >> $outputdir/${1}_${2}_SQL_Databases_Disk_Map_Shutdown.out
         fi
 }
@@ -101,7 +101,7 @@ sql_collect_databases_disk_map()
 sql_collect_known_issues_analyzer()
 {
         if [[ $COLLECT_SQL_CONFIG == [Yy][eE][sS] ]] ; then
-                logger "Collecting SQL Known Issues Analyzer information at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting SQL Known Issues Analyzer information at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 ./collect_sql/sql_linux_known_issues_analyzer.sh "$SQL_SERVER_NAME" "$CONN_AUTH_OPTIONS" >> $outputdir/${1}_${2}_SQL_Linux_Known_Issues_Analyzer.out
         fi
 }
@@ -109,7 +109,7 @@ sql_collect_known_issues_analyzer()
 sql_collect_top_plans_CPU()
 {
         if [[ $COLLECT_PERFSTATS_SNAPSHOT == [Yy][eE][sS] ]] ; then
-                logger "Collecting TOP CPU Plans at Shutdown" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting TOP CPU Plans at Shutdown" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 for i in {1..10}
                 do
                 TOP10PLANS_QUERY=$"SET NOCOUNT ON;SELECT xmlplan FROM (
@@ -137,46 +137,46 @@ sql_collect_top_plans_CPU()
 
 authentication_mode=${1^^}
 
-linuxdiag_inside_container_get_instance_status
+sqllogscout_inside_container_get_instance_status
 find_sqlcmd
 
 
-if grep -q "ELEVATED_PERMISSIONS:YES" "$outputdir/linuxdiag_intiated_as_user.log"; then
+if grep -q "ELEVATED_PERMISSIONS:YES" "$outputdir/sqllogscout_intiated_as_user.log"; then
     ELEVATED_PERMISSIONS=true
 fi
 
 # Checks: if we run with user id 0 and not inside a container, and provide the warning and exit
 if [ "$EUID" -ne 0 ] && [ "$is_instance_inside_container_active" = "NO" ] && [ "$ELEVATED_PERMISSIONS" = true ]; then
-	echo -e "\e[31mWarning: LinuxDiag was initiated with elevated permissions.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$linuxdiag_log")
-        echo -e "\e[31mHowever, LinuxDiag Stop was not initiated with elevated permissions.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$linuxdiag_log")
-	echo -e "\e[31mElevated permissions are required for LinuxDiag to stop the collectors that are currently.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$linuxdiag_log")
-        echo -e "\e[31mexisting... .\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$linuxdiag_log")
-        echo -e "" | tee -a "$linuxdiag_log"
-	echo -e "\e[31mPlease run 'sudo ./stop_collector.sh' .\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$linuxdiag_log")
+	echo -e "\e[31mWarning: sqllogscout was initiated with elevated permissions.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
+        echo -e "\e[31mHowever, sqllogscout Stop was not initiated with elevated permissions.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
+	echo -e "\e[31mElevated permissions are required for sqllogscout to stop the collectors that are currently.\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
+        echo -e "\e[31mexisting... .\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
+        echo -e "" | tee -a "$sqllogscout_log"
+	echo -e "\e[31mPlease run 'sudo ./stop_collector.sh' .\e[0m" | tee >(sed -e 's/\x1b\[[0-9;]*m//g' >> "$sqllogscout_log")
 	exit 1
 fi
 
 #Checks: make sure we have a valid authentication entered, we are running with system that has systemd
 if [[ ! -z "$authentication_mode" ]] && [[ $is_instance_inside_container_active == "NO" ]] && [[ "$authentication_mode" != "SQL" ]] && [[ "$authentication_mode" != "AD" ]] && [[ "$authentication_mode" != "NONE" ]]; then
-	echo -e "\x1B[33mwarning: Invalid authentication mode (first argument passed to LinuxDiag)\x1B[0m"
+	echo -e "\x1B[33mwarning: Invalid authentication mode (first argument passed to sqllogscout)\x1B[0m"
 	echo "" 
 	echo "Valid options are:" 
 	echo "  SQL"
 	echo "  AD"
 	echo "  NONE"
 	echo "" 
-	echo -e "\x1B[33mIgnoring the entry, LinuxDiag will ask you which Authentication Mode to use...\x1B[0m" 
+	echo -e "\x1B[33mIgnoring the entry, sqllogscout will ask you which Authentication Mode to use...\x1B[0m" 
 	exit 1	
 fi
 
 #Checks: make sure we have a valid authentication entered, we are running with system that has no systemd
 if [[ ! -z "$authentication_mode" ]] && [[ $is_instance_inside_container_active == "YES" ]] && [[ "$authentication_mode" != "SQL" ]]; then
-	echo -e "\x1B[33mwarning: Invalid authentication mode (first argument passed to LinuxDiag)\x1B[0m"
+	echo -e "\x1B[33mwarning: Invalid authentication mode (first argument passed to sqllogscout)\x1B[0m"
 	echo "" 
 	echo "Valid options are:" 
 	echo "  SQL"
 	echo "" 
-	echo -e "\x1B[33mIgnoring the entry, LinuxDiag will use 'SQL' Authentication Mode...\x1B[0m" 
+	echo -e "\x1B[33mIgnoring the entry, sqllogscout will use 'SQL' Authentication Mode...\x1B[0m" 
 fi
 
 outputdir="$PWD/output"
@@ -192,35 +192,35 @@ NOW=`date +"%m_%d_%Y_%H_%M"`
 # - Clean up background processes
 # ──────────────────────────────────
 
-if [[ -f $outputdir/linuxdiag_stoppids_sql_collectors.log ]] || [[ -f $outputdir/linuxdiag_stoppids_os_collectors.log ]]; then
-       logger "Stopping background processes" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+if [[ -f $outputdir/sqllogscout_stoppids_sql_collectors.log ]] || [[ -f $outputdir/sqllogscout_stoppids_os_collectors.log ]]; then
+       logger "Stopping background processes" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 fi
 
-if [[ -f $outputdir/linuxdiag_stoppids_sql_collectors.log ]]; then
-	logger "Starting to stop background processes that were collecting sql data" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-	#cat $outputdir/linuxdiag_stoppids_sql_collectors.log
-	kill -9 `cat $outputdir/linuxdiag_stoppids_sql_collectors.log` 2> /dev/null
-        killedlist=$(awk '{ for (i=1; i<=NF; i++) RtoC[i]= (RtoC[i]? RtoC[i] FS $i: $i) } END{ for (i in RtoC) print RtoC[i] }' $outputdir/linuxdiag_stoppids_sql_collectors.log)
-        logger "Stopping the following PIDs $killedlist" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-	#rm -f $outputdir/linuxdiag_stoppids_sql_collectors.log 2> /dev/null
+if [[ -f $outputdir/sqllogscout_stoppids_sql_collectors.log ]]; then
+	logger "Starting to stop background processes that were collecting sql data" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+	#cat $outputdir/sqllogscout_stoppids_sql_collectors.log
+	kill -9 `cat $outputdir/sqllogscout_stoppids_sql_collectors.log` 2> /dev/null
+        killedlist=$(awk '{ for (i=1; i<=NF; i++) RtoC[i]= (RtoC[i]? RtoC[i] FS $i: $i) } END{ for (i in RtoC) print RtoC[i] }' $outputdir/sqllogscout_stoppids_sql_collectors.log)
+        logger "Stopping the following PIDs $killedlist" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+	#rm -f $outputdir/sqllogscout_stoppids_sql_collectors.log 2> /dev/null
 fi
-if [[ -f $outputdir/linuxdiag_stoppids_os_collectors.log ]]; then
-        logger "Starting to stop background processes that were collecting host data" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-	#cat $outputdir/linuxdiag_stoppids_os_collectors.log
-	kill -9 `cat $outputdir/linuxdiag_stoppids_os_collectors.log` 2> /dev/null
-        killedlist=$(awk '{ for (i=1; i<=NF; i++) RtoC[i]= (RtoC[i]? RtoC[i] FS $i: $i) } END{ for (i in RtoC) print RtoC[i] }' $outputdir/linuxdiag_stoppids_os_collectors.log)
-        logger "Stopping the following PIDs $killedlist" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-	#rm -f $outputdir/linuxdiag_stoppids_os_collectors.log 2> /dev/null
+if [[ -f $outputdir/sqllogscout_stoppids_os_collectors.log ]]; then
+        logger "Starting to stop background processes that were collecting host data" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+	#cat $outputdir/sqllogscout_stoppids_os_collectors.log
+	kill -9 `cat $outputdir/sqllogscout_stoppids_os_collectors.log` 2> /dev/null
+        killedlist=$(awk '{ for (i=1; i<=NF; i++) RtoC[i]= (RtoC[i]? RtoC[i] FS $i: $i) } END{ for (i in RtoC) print RtoC[i] }' $outputdir/sqllogscout_stoppids_os_collectors.log)
+        logger "Stopping the following PIDs $killedlist" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+	#rm -f $outputdir/sqllogscout_stoppids_os_collectors.log 2> /dev/null
 fi
 
 
-logger "Starting Static Collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting Static Collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 # ────────────────────────────
 # Config section
 # - read config values
 # ────────────────────────────
-CONFIG_FILE="./support/linuxdiag_collector.conf"
+CONFIG_FILE="./support/sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -251,7 +251,7 @@ fi
 # ────────────────────────────
 # - Collect "host_instance"                   
 # - SQL running on VM                
-# - LinuxDiag is running on host       
+# - sqllogscout is running on host       
 # ────────────────────────────
 
 if [[ $COLLECT_HOST_SQL_INSTANCE == [Yy][eE][sS] ]];then
@@ -264,18 +264,18 @@ if [[ $COLLECT_HOST_SQL_INSTANCE == [Yy][eE][sS] ]];then
 
                 #if no errors, go ahead and try to connect            
                 if [ $? -eq 0 ]; then
-                        logger "Collecting information from host instance $HOSTNAME and port $SQL_LISTEN_PORT" "info_highlight" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+                        logger "Collecting information from host instance $HOSTNAME and port $SQL_LISTEN_PORT" "info_highlight" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
                         sql_connect "host_instance" "${HOSTNAME}" "${SQL_LISTEN_PORT}" "${authentication_mode}"
                         sqlconnect=$?
                         if [[ $sqlconnect -ne 1 ]]; then
-                                logger "Connection to host instance using $authentication_mode authentication failed." "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
-                                logger "Please refer to the above lines for errors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
-                                logger "Skipping static TSQL based collectors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+                                logger "Connection to host instance using $authentication_mode authentication failed." "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
+                                logger "Please refer to the above lines for errors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
+                                logger "Skipping static TSQL based collectors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
                         else
                                 sql_stop_xevent "${HOSTNAME}" "host_instance" 
                                 sql_stop_trace "${HOSTNAME}" "host_instance" 
 
-                                logger "Starting static TSQL Based collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+                                logger "Starting static TSQL Based collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
 
                                 sql_collect_config "${HOSTNAME}" "host_instance"
                                 sql_collect_top_plans_CPU "${HOSTNAME}" "host_instance"
@@ -290,7 +290,7 @@ if [[ $COLLECT_HOST_SQL_INSTANCE == [Yy][eE][sS] ]];then
                                 sql_collect_known_issues_analyzer "${HOSTNAME}" "host_instance"
                         fi
                 else
-                        logger "there is no SQL instance listening on port $SQL_LISTEN_PORT, skipping TSQL based collectors.." "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+                        logger "there is no SQL instance listening on port $SQL_LISTEN_PORT, skipping TSQL based collectors.." "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
                 fi
         fi
 fi
@@ -298,25 +298,25 @@ fi
 # ──────────────────────────────────────
 # - Collect "instance"                   
 # - SQL running inside container
-# - LinuxDiag is running inside container       
+# - sqllogscout is running inside container       
 # ──────────────────────────────────────
 
 if [[ $COLLECT_HOST_SQL_INSTANCE == [Yy][eE][sS] ]];then
-	linuxdiag_inside_container_get_instance_status
+	sqllogscout_inside_container_get_instance_status
 	if [[ "${is_instance_inside_container_active}" == [Yy][eE][sS] ]]; then
                 SQL_SERVER_NAME="$HOSTNAME,1433"
-                logger "Collecting information from instance $HOSTNAME and port 1433" "info_highlight" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                logger "Collecting information from instance $HOSTNAME and port 1433" "info_highlight" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 sql_connect "instance" "${HOSTNAME}" "1433" "${authentication_mode}"
                 sqlconnect=$?
                 if [[ $sqlconnect -ne 1 ]]; then
-                        logger "Connection to instance using $authentication_mode authentication failed." "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                        logger "Please refer to the above lines for errors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                        logger "Skipping static TSQL based collectors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                        logger "Connection to instance using $authentication_mode authentication failed." "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                        logger "Please refer to the above lines for errors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                        logger "Skipping static TSQL based collectors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                 else
                         sql_stop_xevent "${HOSTNAME}" "instance" 
                         sql_stop_trace "${HOSTNAME}" "instance" 
 
-                        logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                        logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
                         #chown only if pattern exists.
                         stat -t -- $output/*.xel >/dev/null 2>&1 && chown $USER: $outputdir/*.xel  
@@ -336,7 +336,7 @@ fi
 # ──────────────────────────────────────
 # - Collect "container_instance"                   
 # - SQL running as docker container
-# - LinuxDiag is running on VM       
+# - sqllogscout is running on VM       
 # ──────────────────────────────────────
 
 if [[ $COLLECT_CONTAINER != [Nn][Oo] ]]; then
@@ -350,18 +350,18 @@ if [[ $COLLECT_CONTAINER != [Nn][Oo] ]]; then
                         get_docker_mapped_port "${dockerid}"
                         #SQL_SERVER_NAME="$HOSTNAME,$dockerport"    
                         SQL_SERVER_NAME="$dockername,$dockerport"
-                        logger "Collecting information from container instance ${dockername} and port ${dockerport}" "info_highlight" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                        logger "Collecting information from container instance ${dockername} and port ${dockerport}" "info_highlight" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                         sql_connect "container_instance" "${dockername}" "${dockerport}" "${authentication_mode}"
                         sqlconnect=$?
                         if [[ $sqlconnect -ne 1 ]]; then
-                                logger "Connection to container instance using $authentication_mode authentication failed." "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                                logger "Please refer to the above lines for errors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                                logger "Skipping static TSQL based collectors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                                logger "Connection to container instance using $authentication_mode authentication failed." "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                                logger "Please refer to the above lines for errors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                                logger "Skipping static TSQL based collectors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                         else
                                 sql_stop_xevent "${dockername}" "container_instance"
                                 sql_stop_trace "${dockername}" "container_instance"
 
-                                logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                                logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
                                 sql_collect_xevent "${dockerid}" "${dockername}" "container_instance"
                                 sql_collect_trace "${dockerid}" "${dockername}" "container_instance"
@@ -384,18 +384,18 @@ if [[ $COLLECT_CONTAINER != [Nn][Oo] ]]; then
                                 #moved to helper function
                                 get_docker_mapped_port "${dockerid}"
                                 SQL_SERVER_NAME="$dockername,$dockerport"
-                                logger "Collecting information from container instance ${dockername} and port ${dockerport}" "info_highlight" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                                logger "Collecting information from container instance ${dockername} and port ${dockerport}" "info_highlight" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                                 sql_connect "container_instance" "${dockername}" "${dockerport}" "${authentication_mode}"
                                 sqlconnect=$?
                                 if [[ $sqlconnect -ne 1 ]]; then
-                                        logger "Connection to container instance using $authentication_mode authentication failed." "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                                        logger "Please refer to the above lines for errors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-                                        logger "Skipping static TSQL based collectors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                                        logger "Connection to container instance using $authentication_mode authentication failed." "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                                        logger "Please refer to the above lines for errors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+                                        logger "Skipping static TSQL based collectors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
                                 else
                                         sql_stop_xevent "${dockername}" "container_instance"
                                         sql_stop_trace "${dockername}" "container_instance"
 
-                                        logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+                                        logger "Starting Static TSQL Based collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
                                         sql_collect_xevent "${dockerid}" "${dockername}" "container_instance"
                                         sql_collect_trace "${dockerid}" "${dockername}" "container_instance"
@@ -418,7 +418,7 @@ fi
 # - this section will use sh script to collect logs and configuration                #
 ######################################################################################
 
-logger "Starting Static Logs Collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting Static Logs Collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 #collect basic machine configuration
 if [[ $COLLECT_HOST_OS_INFO == [Yy][eE][sS] && $COLLECT_OS_CONFIG == [Yy][eE][sS] ]]; then
@@ -460,33 +460,33 @@ fi
 #gather SQL Best Practices Analyzer
 #we will check for COLLECT_CONTAINER and COLLECT_HOST_SQL_INSTANCE inside the script, since its one script that collects from both places
 if [[ $COLLECT_SQL_BEST_PRACTICES == [Yy][eE][sS] ]]; then
-        logger "Collecting SQL Linux Best Practices Analyzer" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting SQL Linux Best Practices Analyzer" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         ./collect_sql/sql_linux_best_practices_analyzer.sh --explain-all >> $outputdir/${HOSTNAME}_host_instance_SQL_Linux_Best_Practice_Analyzer.out
 fi
 
 if [ "$EUID" -ne 0 ]; then
 
 #empty line
-logger "Collection Completed, Getting the content of the output folder... " "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-logger " " "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" " " "0"
+logger "Collection Completed, Getting the content of the output folder... " "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+logger " " "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" " " "0"
 
 # for minimal collecton, where user didnt use sudo, we cant compress the output file as it may contains files with mssql user, like XEL and TRC files.
-  logger "#" "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" "#" "0"
-  logger "Data collected in the output folder, Compress the output folder with sudo to include all the files." "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" " " "1"
-  logger "#" "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" "#" "0"
+  logger "#" "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" "#" "0"
+  logger "Data collected in the output folder, Compress the output folder with sudo to include all the files." "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" " " "1"
+  logger "#" "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" "#" "0"
   exit 0
 fi
 
 #empty line
-logger "Collection Completed, Getting the content of the output folder..." "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-logger " " "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" " " "0"
+logger "Collection Completed, Getting the content of the output folder..." "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+logger " " "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" " " "0"
 
-logger "Creating Compressed Archive" "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" "#" "0"
+logger "Creating Compressed Archive" "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" "#" "0"
 #zip up output directory
 short_hostname="${HOSTNAME%%.*}"
 tar -cjf "output_${short_hostname}_${NOW}.tar.bz2" output
-logger "Created the compressed archive output_${short_hostname}_${NOW}.tar.bz2" "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" " " "1"
-logger "#" "header_yellow" "1" "1" "${linuxdiag_log:-/dev/null}"  "" "#" "0"
+logger "Created the compressed archive output_${short_hostname}_${NOW}.tar.bz2" "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" " " "1"
+logger "#" "header_yellow" "1" "1" "${sqllogscout_log:-/dev/null}"  "" "#" "0"
 
 exit 0
  

@@ -4,7 +4,7 @@ outputdir="$PWD/output"
 
 ###NOT USED FILE............... the logs are being collected by collect_sql_logs.sh
 # get container directive from config file
-CONFIG_FILE="./support/linuxdiag_collector.conf"
+CONFIG_FILE="./support/sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -31,7 +31,7 @@ fi
 	if [[ "$COLLECT_CONTAINER" != [Aa][Ll][Ll] ]]; then
 	# we need to process just the specific container
 		name=$COLLECT_CONTAINER
-		logger "Collecting logs from container : $name" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting logs from container : $name" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		dockerid=$(docker ps -q --filter name=$name)
 		dockername=$(docker inspect -f "{{.Name}}" $dockerid)
 		docker cp $dockerid:/var/opt/mssql/log/. $outputdir/log/$dockername | 2>/dev/null
@@ -43,7 +43,7 @@ fi
 		for dockerid in $dockerid_col;
 		do
 			dockername=$(docker inspect -f "{{.Name}}" $dockerid)
-			logger "Collecting logs from container : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting logs from container : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			docker cp $dockerid:/var/opt/mssql/log/. $outputdir/log/$dockername | 2>/dev/null
 		done;
 	fi

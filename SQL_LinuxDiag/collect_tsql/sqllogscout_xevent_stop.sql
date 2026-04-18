@@ -2,7 +2,7 @@ DECLARE @name sysname
 DECLARE @sqlstr nvarchar(max)
 DECLARE mycursor cursor for 
 select name from sys.dm_xe_sessions
-where name like 'linuxdiag_xevent%'
+where name like 'sqllogscout_xevent%'
 
 
 OPEN mycursor   

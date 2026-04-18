@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 collect_docker_sql_logs()
 {
@@ -13,7 +13,7 @@ collect_docker_sql_logs()
 	docker_has_mssqlconf=$(docker exec --user root ${dockername} sh -c "(ls /var/opt/mssql/mssql.conf >> /dev/null 2>&1 && echo YES) || echo NO")
 
 	#Collecting errorlog
-	logger "Collecting errorlog system_health alwayson_health trc logs : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+	logger "Collecting errorlog system_health alwayson_health trc logs : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	if [[ "${docker_has_mssqlconf}" == "YES" ]]; then
 		get_docker_conf_option '/var/opt/mssql/mssql.conf' 'filelocation' 'errorlogfile' '/var/opt/mssql/log/errorlog' $dockername
 		SQL_ERRORLOG=$get_docker_conf_option_result
@@ -31,7 +31,7 @@ collect_docker_sql_logs()
 	fi
 
 	#Collecting sqlagents logs
-	logger "Collecting sqlagent logs : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+	logger "Collecting sqlagent logs : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 	if [[ "${docker_has_mssqlconf}" == "YES" ]]; then
 		get_docker_conf_option '/var/opt/mssql/mssql.conf' 'sqlagent' 'errorlogfile' '/var/opt/mssql/log/sqlagent' $dockername
@@ -55,7 +55,7 @@ collect_docker_sql_logs()
 	docker_has_loggerini=$(docker exec --user root ${dockername} sh -c "(ls /var/opt/mssql/logger.ini >> /dev/null 2>&1 && echo YES) || echo NO")
 
 	if [[ "${docker_has_loggerini}" == "YES" ]]; then
-		logger "Collecting pal logs from container: $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting pal logs from container: $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		get_docker_conf_option '/var/opt/mssql/logger.ini' 'Output:sql' 'filename' 'NA' $dockername
 		result=$get_docker_conf_option_result
 		if [ "$result" = "NA" ]; then
@@ -73,16 +73,16 @@ collect_docker_sql_logs()
 				docker exec $dockerid sh -c "cd ${PAL_LOG_DIR} && tar -cf - ${PAL_LOG}*" | $outputdir/${dockername}_container_instance_pal_logs.tar
 			fi
 		else
-			logger "logger.ini maybe malformed, skipping pal log collection for container : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "logger.ini maybe malformed, skipping pal log collection for container : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		fi
 	fi
 
 	#Collect mssql.conf, this one we need to echo out before collection as info about this container
-	logger "Collecting mssql.conf from container instance : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+	logger "Collecting mssql.conf from container instance : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	if [[ "${docker_has_mssqlconf}" == "YES" ]]; then
 		docker cp $dockerid:/var/opt/mssql/mssql.conf $outputdir/${dockername}_container_instance_mssql.conf | 2>/dev/null
 	else
-		logger "Container ${dockername} has no mssql.conf file" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Container ${dockername} has no mssql.conf file" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	fi
 
 	
@@ -92,7 +92,7 @@ collect_docker_sql_logs()
 # Script is starting #
 ######################
 
-logger "Starting sql logs collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting sql logs collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 NOW=`date +"%m_%d_%Y"`
 
 if [[ -d "$1" ]] ; then
@@ -114,7 +114,7 @@ else
 fi
 
 # get container directive from config file
-CONFIG_FILE="./linuxdiag_collector.conf"
+CONFIG_FILE="./sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -134,7 +134,7 @@ if [[ "$COLLECT_CONTAINER" != [Nn][Oo] ]]; then
 			if [ $dockerid ]; then
 				collect_docker_sql_logs $dockerid $dockername
 			else
-				logger "Container not found : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+				logger "Container not found : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
 			fi
 		else
 			# we need to iterate through all containers
@@ -166,7 +166,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 		fi
 
 		if [ -d "$SQL_LOG_DIR" ]; then
-			logger "Collecting errorlog system_health alwayson_health trc logs from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting errorlog system_health alwayson_health trc logs from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 #			sh -c 'tar -cjf "$0/$3_host_instance_sql_logs_$1.tar.bz2" $2/errorlog* $2/system_health*.xel $2/alwayson_health*.xel*.xel $2/log*.trc --ignore-failed-read --absolute-names 2>/dev/null' "$outputdir" "$NOW" "$SQL_LOG_DIR" "$HOSTNAME"			
 			if hash bzip2 2>/dev/null; then
 				current_dir="$PWD"
@@ -189,7 +189,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 			SQL_AGENTLOG_DIR=$(dirname $SQL_AGENTLOG)
 		fi
 		if [ -d "$SQL_AGENTLOG_DIR" ]; then
-			logger "Collecting sqlagent logs from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting sqlagent logs from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 #			sh -c 'tar -cjf "$0/$3_host_instance_sqlagent_logs_$1.tar.bz2" $2/sqlagent* --ignore-failed-read --absolute-names 2>/dev/null' "$outputdir" "$NOW" "$SQL_AGENTLOG_DIR" "$HOSTNAME"
 			if hash bzip2 2>/dev/null; then
 				current_dir="$PWD"
@@ -208,7 +208,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 
 		#Collecting pal logs 
 		if [ -e "/var/opt/mssql/logger.ini" ]; then
-			logger "Collecting pal logs from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting pal logs from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			get_host_conf_option '/var/opt/mssql/logger.ini' 'Output:sql' 'filename' 'NA'
 			result=$get_host_conf_option_result
 			if [ "$result" = "NA" ]; then
@@ -232,17 +232,17 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 					fi
 				fi
 			else
-				logger "logger.ini maybe malformed, skipping pal log collection for host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "logger.ini maybe malformed, skipping pal log collection for host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			fi
 		fi
 			
 		#Getting mssql.conf
-		logger "Collecting mssql.conf from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting mssql.conf from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 		if [ -e "/var/opt/mssql/mssql.conf" ]; then
 			cp /var/opt/mssql/mssql.conf $outputdir/${HOSTNAME}_host_instance_mssql.conf
 		else
-			logger "Host instance has no mssql.conf file" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Host instance has no mssql.conf file" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		fi
 	fi
 fi
@@ -250,12 +250,12 @@ fi
 #Collect informaiton if we are running inside container
 if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 	#Collecting errorlog* system_health*.xel log*.trc
-	linuxdiag_inside_container_get_instance_status
+	sqllogscout_inside_container_get_instance_status
 	if [ "${is_instance_inside_container_active}" == "YES" ]; then
 		SQL_ERRORLOG="/var/opt/mssql/log/errorlog"
 		SQL_LOG_DIR=$(dirname $SQL_ERRORLOG)
 		if [ -d "$SQL_LOG_DIR" ]; then
-			logger "Collecting errorlog system_health alwayson_health trc logs from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting errorlog system_health alwayson_health trc logs from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			if hash bzip2 2>/dev/null; then
 				current_dir="$PWD"
 				sh -c "cd ${SQL_LOG_DIR} && tar -cf - errorlog* *_health*.xel HkEngineEventFile*.xel log*.trc" | bzip2 > $outputdir/${HOSTNAME}_instance_sql_logs.bz2
@@ -271,7 +271,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 		SQL_AGENTLOG="/var/opt/mssql/log/sqlagent"
 		SQL_AGENTLOG_DIR=$(dirname $SQL_AGENTLOG)
 		if [ -d "$SQL_AGENTLOG_DIR" ]; then
-			logger "Collecting sqlagent logs from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting sqlagent logs from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			if hash bzip2 2>/dev/null; then
 				current_dir="$PWD"
 				sh -c "cd ${SQL_AGENTLOG_DIR} && tar -cf - sqlagent*" | bzip2 > $outputdir/${HOSTNAME}_instance_sqlagent_logs.bz2
@@ -289,7 +289,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 
 		#Collecting pal logs 
 		if [ -e "/var/opt/mssql/logger.ini" ]; then
-			logger "Collecting pal logs from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting pal logs from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			get_host_conf_option '/var/opt/mssql/logger.ini' 'Output:sql' 'filename' 'NA'
 			result=$get_host_conf_option_result
 			if [ "$result" = "NA" ]; then
@@ -312,17 +312,17 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 					fi
 				fi
 			else
-				logger "logger.ini maybe malformed, skipping pal log collection for instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "logger.ini maybe malformed, skipping pal log collection for instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			fi
 		fi
 			
 		#Getting mssql.conf
-		logger "Collecting mssql.conf from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting mssql.conf from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 		if [ -e "/var/opt/mssql/mssql.conf" ]; then
 			cp /var/opt/mssql/mssql.conf $outputdir/${HOSTNAME}_instance_mssql.conf
 		else
-			logger "Host instance has no mssql.conf file" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Host instance has no mssql.conf file" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		fi
 	fi
 fi
