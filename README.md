@@ -238,7 +238,7 @@ however, If you have multiple instances running on the **same machine**, whether
 	```
 	
 2. extract the content to /tmp/sql_logscout using `tar -xvf sql_logscout_linux_<version>.tar -C /`
-3. Make sure all *.sh has x attribute, if needed run `chmod a+x *.sh`
+3. Make sure all *.sh has x attribute, if needed run `find . -type f -name "*.sh" -exec chmod a+x {} \;`
 
 ### Starting SQL Logscout
 
@@ -271,7 +271,7 @@ Please upload the produced compressed output file to the engineer you are workin
 1. you will need to copy `sql_logscout_linux_<version>.tar` into the sql server container using "kubectl cp", in case sql server is part of always on setup, then to copy it to the primary
 2. "kubectl exec... bash" into master POD
 3. extract the content using `tar -xvf sql_logscout_linux_<version>.tar`
-4. Make sure all *.sh has x attribute using `chmod a+x *.sh`
+4. Make sure all *.sh has x attribute using `find . -type f -name "*.sh" -exec chmod a+x {} \;`
 
 ### Starting SQL Logscout 
 Execute this command to start SQL logscout. It will guide you through Selecting a scenario
