@@ -1,4 +1,4 @@
-# SQL LinuxDiag
+# SQL Logscout
 
 [![licence badge]][licence]
 [![stars badge]][stars]
@@ -6,30 +6,30 @@
 [![issues badge]][issues]
 
 [licence badge]:https://img.shields.io/badge/license-MIT-blue.svg
-[stars badge]:https://img.shields.io/github/stars/Microsoft/SQL_LinuxDiag.svg
-[forks badge]:https://img.shields.io/github/forks/Microsoft/SQL_LinuxDiag.svg
-[issues badge]:https://img.shields.io/github/issues/Microsoft/SQL_LinuxDiag.svg
+[stars badge]:https://img.shields.io/github/stars/Microsoft/SQL_logscout.svg
+[forks badge]:https://img.shields.io/github/forks/Microsoft/SQL_logscout.svg
+[issues badge]:https://img.shields.io/github/issues/Microsoft/SQL_logscout.svg
 
-[licence]:https://github.com/microsoft/SQL_LinuxDiag/blob/master/license.md
-[stars]:https://github.com/Microsoft/SQL_LinuxDiag/stargazers
-[forks]:https://github.com/Microsoft/SQL_LinuxDiag/network
-[issues]:https://github.com/Microsoft/SQL_LinuxDiag/issues
+[licence]:https://github.com/microsoft/SQL_logscout/blob/master/license.md
+[stars]:https://github.com/Microsoft/SQL_logscout/stargazers
+[forks]:https://github.com/Microsoft/SQL_logscout/network
+[issues]:https://github.com/Microsoft/SQL_logscout/issues
 
 
-- [SQL LinuxDiag](#sql-linuxdiag)
+- [SQL logscout](#sql-logscout)
 - [Supported Products](#supported-products)
 - [Prerequisites](#prerequisites)
 - [Scenario Files and Usage Information](#scenario-files-and-usage-information)
 - [Authentication Modes](#authentication-modes)
-- [SQL LinuxDiag Scripts Arguments](#sql-linuxdiag-scripts-arguments)
-- [Downloading and Executing SQL LinuxDiag](#downloading-and-executing-sql-linuxdiag)
-  - [Downloading SQL LinuxDiag](#downloading-sql-linuxdiag)
-  - [Preparing SQL LinuxDiag for Execution](#preparing-sql-linuxdiag-for-execution)
-  - [Starting SQL LinuxDiag](#starting-sql-linuxdiag)
-  - [Stopping SQL LinuxDiag](#stopping-sql-linuxdiag)
+- [SQL logscout Scripts Arguments](#sql-logscout-scripts-arguments)
+- [Downloading and Executing SQL logscout](#downloading-and-executing-sql-logscout)
+  - [Downloading SQL logscout](#downloading-sql-logscout)
+  - [Preparing SQL logscout for Execution](#preparing-sql-logscout-for-execution)
+  - [Starting SQL logscout](#starting-sql-logscout)
+  - [Stopping SQL logscout](#stopping-sql-logscout)
 - [Capture logs from SQL Container Instance Deployed in Kubernetes](#capture-logs-from-sql-container-instance-deployed-in-kubernetes)
-  - [Starting SQL LinuxDiag](#starting-sql-linuxdiag-1)
-  - [Stopping SQL LinuxDiag](#stopping-sql-linuxdiag-1)
+  - [Starting SQL logscout](#starting-sql-logscout-1)
+  - [Stopping SQL logscout](#stopping-sql-logscout-1)
 - [License Agreement](#license-agreement)
 
 
@@ -82,10 +82,10 @@ Several Linux commands and utilities are necessary for data collection. **syssta
 		- For Ubuntu: `sudo apt install bzip2`
 		- For SUSE: `sudo zypper install bzip2`
   
-When you launch the SQL LinuxDiag utility, it checks for these prerequisites and notifies you of any missing commands or utilities. If you don't have all these tools, we may only be able to collect partial diagnostic logs, leading to potentially inconclusive results. Depending on your Linux operating system, you might need to register with the OS vendor to install all the required utilities. Seek assistance from your system administrator to complete these tasks.
+When you launch the SQL logscout utility, it checks for these prerequisites and notifies you of any missing commands or utilities. If you don't have all these tools, we may only be able to collect partial diagnostic logs, leading to potentially inconclusive results. Depending on your Linux operating system, you might need to register with the OS vendor to install all the required utilities. Seek assistance from your system administrator to complete these tasks.
 
 ## Scenario Files and Usage Information
-You can run only a single copy of SQL LinuxDiag utility on a system. If you attempt to launch the second instance, it will provide you with warnings and exit.
+You can run only a single copy of SQL logscout utility on a system. If you attempt to launch the second instance, it will provide you with warnings and exit.
 All the scripts are tested against bash shell. Please launch the start and stop collector explicitly using /bin/bash
 This utility can collect information and logs for SQL Server instances that are installed as host instance or as container instances.
 
@@ -98,7 +98,7 @@ Depending on the scenario for which you are collecting logs, you may have to jus
 
 This is list of the available scenario:
 
-when running SQL LinuxDiag from host machine, SQL LinuxDiag will collect information from both host and container instances using one of the following scenarios:
+when running SQL logscout from host machine, SQL logscout will collect information from both host and container instances using one of the following scenarios:
 
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
@@ -120,7 +120,7 @@ when running SQL LinuxDiag from host machine, SQL LinuxDiag will collect informa
 |   |                                   |may impact server performance due to overhead.                                |
 +---+-----------------------------------+------------------------------------------------------------------------------+
 ```
-In the case when SQL container is deployed to Kubernetes, you can run SQL LinuxDiag from within the container collect information from the container using one of the following scenarios:
+In the case when SQL container is deployed to Kubernetes, you can run SQL logscout from within the container collect information from the container using one of the following scenarios:
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
 |No |Scenario file                      |Description                                                                   |
@@ -143,10 +143,10 @@ In the case when SQL container is deployed to Kubernetes, you can run SQL LinuxD
 **Note**
 To review which information is being collected in a scenario, please open the .scn file and check its settings.
 
-You can create a custom scenario file by copying an existing one and modifying the settings as needed. Ensure the file is located in the same directory as SQL LinuxDiag, and pass it as the first argument when running the start script.
+You can create a custom scenario file by copying an existing one and modifying the settings as needed. Ensure the file is located in the same directory as SQL logscout, and pass it as the first argument when running the start script.
 
 ## Authentication Modes
-SQL LinuxDiag can use one of the following Authentication Modes when connecting to SQL server
+SQL logscout can use one of the following Authentication Modes when connecting to SQL server
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
 |No |Authentication Mode                |Description                                                                   |
@@ -161,29 +161,29 @@ SQL LinuxDiag can use one of the following Authentication Modes when connecting 
 +---+-----------------------------------+------------------------------------------------------------------------------+
 ```
 **Note**
-If you want to use AD Authenticaiton Mode, run kinit with AD user that is allowed to connect to sql server before running SQL LinuxDiag.
+If you want to use AD Authenticaiton Mode, run kinit with AD user that is allowed to connect to sql server before running SQL logscout.
 
 ```
 sudo kinit user@DOMAIN.COM
 ```
 
 **Note**
-when running SQL LinuxDiag from inside the container (the case of Kubernetes) you will only have 'SQL' Authentication Mode.
+when running SQL logscout from inside the container (the case of Kubernetes) you will only have 'SQL' Authentication Mode.
 
-## SQL LinuxDiag Scripts Arguments 
-SQL LinuxDiag has the following argument s
+## SQL logscout Scripts Arguments 
+SQL logscout has the following argument s
 
 Starting script `start_collector.sh` accepts 3 arguments 
 - Scenario file: Valid options include any of the scenario files listed above, or a custom scenario you configure with the necessary settings. If any required setting is omitted, it will automatically default to NO or the lightest-weight value applicable for that setting.
-- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL LinuxDiag will prompt you to choose an authentication mode.
-- perfstat file, Valid options are sql_perf_stats.sql and sql_perf_stats_lite.sql. If not specified, SQL LinuxDiag will default to sql_perf_stats.sql.
+- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL logscout will prompt you to choose an authentication mode.
+- perfstat file, Valid options are sql_perf_stats.sql and sql_perf_stats_lite.sql. If not specified, SQL logscout will default to sql_perf_stats.sql.
 
 Stopping script `stop_collector.sh` accepts 1 argument
-- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL LinuxDiag will prompt you to choose an authentication mode.
+- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL logscout will prompt you to choose an authentication mode.
 
 **Examples**
 
-Start without passing any arguments, SQL LinuxDiag will ask you which Scenario and Authentication Mode to use.
+Start without passing any arguments, SQL logscout will ask you which Scenario and Authentication Mode to use.
 
 ```
 sudo /bin/bash ./start_collector.sh
@@ -195,7 +195,7 @@ Passing Scenario and Authentication Mode to Start script.
 sudo /bin/bash ./start_collector.sh 'scenario_static_collect.scn' 'SQL'
 ```
 
-Passing Authentication Mode argument only to Start script, SQL LinuxDiag will ask you which Scenario to use.
+Passing Authentication Mode argument only to Start script, SQL logscout will ask you which Scenario to use.
 
 ```
 sudo /bin/bash ./start_collector.sh '' 'AD'
@@ -221,43 +221,43 @@ however, If you have multiple instances running on the **same machine**, whether
 - to collect from all container instances, then adjust these setting to `COLLECT_HOST_SQL_INSTANCE=NO` and `COLLECT_CONTAINER=ALL`
 - To collect data from all instances, both host and container instances, use the default settings `COLLECT_HOST_SQL_INSTANCE=YES` and `COLLECT_CONTAINER=ALL`
 
-## Downloading and Executing SQL LinuxDiag 
-### Downloading SQL LinuxDiag
-- Navigate to releases using the following link https://github.com/microsoft/SQL_LinuxDiag/releases?q=Linux&expanded=true 
+## Downloading and Executing SQL logscout 
+### Downloading SQL logscout
+- Navigate to releases using the following link https://github.com/microsoft/SQL_logscout/releases?q=Linux&expanded=true 
 - Expand Assests section
-- Download `sql_linuxdiag_<version>.tar` 
+- Download `sql_logscout_linux_<version>.tar` 
 
 
-### Preparing SQL LinuxDiag for Execution   
-1. you will need to copy `sql_linuxdiag_<version>.tar` into folder
+### Preparing SQL logscout for Execution   
+1. you will need to copy `sql_logscout_linux_<version>.tar` into folder
 
-	**Note:** if you are capturing extended events the folder hierarchy needs r+x on the whole structure, Different Linux distributions do not allow x permissions on /home/user folder. for example run SQL LinuxDiag from /tmp or /var/tmp folders
+	**Note:** if you are capturing extended events the folder hierarchy needs r+x on the whole structure, Different Linux distributions do not allow x permissions on /home/user folder. for example run SQL logscout from /tmp or /var/tmp folders
 	
 	```bash
-	drwxr-xr-x    2 root root    6 Aug  4 15:31 sql_linuxdiag
+	drwxr-xr-x    2 root root    6 Aug  4 15:31 sql_logscout
 	```
 	
-2. extract the content to /tmp/sql_linuxDiag using `tar -xvf sql_linuxdiag_<version>.tar -C /`
+2. extract the content to /tmp/sql_logscout using `tar -xvf sql_logscout_linux_<version>.tar -C /`
 3. Make sure all *.sh has x attribute, if needed run `chmod a+x *.sh`
 
-### Starting SQL LinuxDiag
+### Starting SQL logscout
 
-**Note:** to allow AD Authentication collectors to collect kvno and klist of service accounts and ketytabs, you need to run the following before running SQL LinuxDiag.
+**Note:** to allow AD Authentication collectors to collect kvno and klist of service accounts and ketytabs, you need to run the following before running SQL logscout.
 
 ```
 sudo kinit user@DOMAIN.COM
 ```
 
-Execute this command to start SQL LinuxDiag. It will guide you through Selecting a scenario and Authentication Mode. Please keep an eye on the screen throughout the execution.
+Execute this command to start SQL logscout. It will guide you through Selecting a scenario and Authentication Mode. Please keep an eye on the screen throughout the execution.
 
 ```
 sudo /bin/bash ./start_collector.sh
 ``` 
 
-### Stopping SQL LinuxDiag
-if you are using of the Scenarios that collects performace data we need to stop SQL LinuxDiag after reproducing the issue.
+### Stopping SQL logscout
+if you are using of the Scenarios that collects performace data we need to stop SQL logscout after reproducing the issue.
 
-Execute this command to stop SQL LinuxDiag. Please keep an eye on the screen throughout the execution for any login request.
+Execute this command to stop SQL logscout. Please keep an eye on the screen throughout the execution for any login request.
 
 ```
 sudo /bin/bash ./stop_collector.sh
@@ -268,20 +268,20 @@ Please upload the produced compressed output file to the engineer you are workin
 
 
 ## Capture logs from SQL Container Instance Deployed in Kubernetes
-1. you will need to copy `sql_linuxdiag_<version>.tar` into the sql server container using "kubectl cp", in case sql server is part of always on setup, then to copy it to the primary
+1. you will need to copy `sql_logscout_linux_<version>.tar` into the sql server container using "kubectl cp", in case sql server is part of always on setup, then to copy it to the primary
 2. "kubectl exec... bash" into master POD
-3. extract the content using `tar -xvf SQL LinuxDiag_<version>.tar`
+3. extract the content using `tar -xvf sql_logscout_linux_<version>.tar`
 4. Make sure all *.sh has x attribute using `chmod a+x *.sh`
 
-### Starting SQL LinuxDiag 
-Execute this command to start SQL LinuxDiag. It will guide you through Selecting a scenario
+### Starting SQL logscout 
+Execute this command to start SQL logscout. It will guide you through Selecting a scenario
 
 ```
 /bin/bash ./start_collector.sh
 ```
 
-### Stopping SQL LinuxDiag
-if you are using of the Scenarios that collects performace data we need to stop SQL LinuxDiag after reproducing the issue.
+### Stopping SQL logscout
+if you are using of the Scenarios that collects performace data we need to stop SQL logscout after reproducing the issue.
 
 ```
 /bin/bash ./stop_collector.sh

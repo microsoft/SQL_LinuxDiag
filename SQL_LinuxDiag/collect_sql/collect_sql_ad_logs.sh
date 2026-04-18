@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 # Arguments:
 #   1. Title
@@ -24,7 +24,7 @@ collect_docker_sql_ad_logs()
 dockerid=$1
 dockername=$2
 
-logger "Collecting AD logs from container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting AD logs from container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 #Check if we have configuration files. default container deployment with no mounts do not have /var/opt/mssql/mssql.conf so we need to check this upfront. 
 docker_has_mssqlconf=$(docker exec --user root ${dockername} sh -c "(ls /var/opt/mssql/mssql.conf >> /dev/null 2>&1 && echo YES) || echo NO")
@@ -33,34 +33,34 @@ get_docker_conf_option '/var/opt/mssql/mssql.conf' 'network' 'kerberoskeytabfile
 SQL_SERVICE_KEYTAB_FILE=$get_docker_conf_option_result
 docker_has_mssql_keytab=$(docker exec --user root ${dockername} sh -c "(ls ${SQL_SERVICE_KEYTAB_FILE} >> /dev/null 2>&1 && echo YES) || echo NO")
     if [[ "${docker_has_mssql_keytab}" == "NO" ]]; then
-		logger "skipping collecting AD logs, there is no mssql.keytab file for container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "skipping collecting AD logs, there is no mssql.keytab file for container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     else
         #Collect krb5.conf from container
         krb5file=$(docker container inspect -f '{{range .Mounts}}{{printf "\n"}}{{.Destination}}{{end}}' ${dockername} | grep -e krb5.conf)
         if [[ "${krb5file}" ]]; then
-            logger "Collecting krb5.conf file from container : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "Collecting krb5.conf file from container : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
             docker cp $dockerid:$krb5file $outputdir/${dockername}_container_instance_krb5.conf | 2>/dev/null
         else	
-            logger "Container ${dockername} has no krb5.conf" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "Container ${dockername} has no krb5.conf" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         fi
 
         #Creating log file
         infolog_filename=$outputdir/${dockername}_container_instance_kerberos.info
 
         #Collect resolv.conf from container
-		logger "Collecting resolv.conf from container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting resolv.conf from container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         capture_system_info_command "cat /etc/resolv.conf" "docker exec --user root "${dockername}" sh -c \"cat /etc/resolv.conf\""
 
         #Collecting mssql.keytab klist information
-        logger "Collecting mssql.keytab klist information from container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-        tmpcontainertmpfile="$outputdir/$(uuidgen).linuxdiag.container.temp"
+        logger "Collecting mssql.keytab klist information from container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+        tmpcontainertmpfile="$outputdir/$(uuidgen).sqllogscout.container.temp"
         docker cp $dockerid:${SQL_SERVICE_KEYTAB_FILE} ${tmpcontainertmpfile} | 2>/dev/null
         capture_system_info_command "klist -kte ${SQL_SERVICE_KEYTAB_FILE}" "klist -kte ${SQL_SERVICE_KEYTAB_FILE}"
 		chmod u+w "$tmpcontainertmpfile"
         rm "$tmpcontainertmpfile"
 
         #Collecting service account kvno information     
-        logger "Collecting service account kvno information from container instance $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Collecting service account kvno information from container instance $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         get_docker_conf_option '/var/opt/mssql/mssql.conf' 'network' 'privilegedadaccount' '' $dockername
 		SQL_SERVICE_ACCOUNT_KVNO=$get_docker_conf_option_result
 
@@ -73,7 +73,7 @@ docker_has_mssql_keytab=$(docker exec --user root ${dockername} sh -c "(ls ${SQL
         #check if krb5 logging was enabled at service level for container instance 
         SQL_CONTAINER_KRB5_TRACE=$(docker exec --user root ${dockername} env | grep "KRB5_TRACE" | grep KRB5_TRACE | sed -e "s/^KRB5_TRACE=//")
         if docker exec --user root ${dockername} test -e "${SQL_CONTAINER_KRB5_TRACE}"; then
-            logger "Collecting sql service krb5 trace from container instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "Collecting sql service krb5 trace from container instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
             docker cp $dockerid:$SQL_CONTAINER_KRB5_TRACE $outputdir/${dockername}_container_instance_$(basename ${SQL_CONTAINER_KRB5_TRACE}) | 2>/dev/null
         fi
     fi
@@ -81,7 +81,7 @@ fi
 }
 
 #Starting the script
-logger "Starting sql AD logs collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting sql AD logs collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 if [[ -d "$1" ]] ; then
 	outputdir="$1"
@@ -102,7 +102,7 @@ else
 fi
 
 # get container directive from config file
-CONFIG_FILE="./linuxdiag_collector.conf"
+CONFIG_FILE="./sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -122,7 +122,7 @@ if [[ "$COLLECT_CONTAINER" != [Nn][Oo] ]]; then
 			if [ $dockerid ]; then
 				collect_docker_sql_ad_logs $dockerid $dockername
 			else
-				logger "Container not found : $dockername" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+				logger "Container not found : $dockername" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
 			fi
 		else	
 			# we need to iterate through all containers
@@ -143,7 +143,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 	get_host_instance_status
 	#only check if its installed, if its installed then regradlesss if its active or note we need to collect the logs 
 	if [ "${is_host_instance_service_installed}" == "YES" ]; then
-		logger "Collecting AD logs from host instance ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting AD logs from host instance ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 		infolog_filename=$outputdir/${HOSTNAME}_host_intance_Kerberos.info
 
@@ -154,14 +154,14 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 			SQL_SERVICE_KEYTAB_FILE=$get_host_conf_option_result
 
 			if [ ! -e $SQL_SERVICE_KEYTAB_FILE ]; then
-				logger "skipping collecting AD logs, there is no mssql.keytab file for host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "skipping collecting AD logs, there is no mssql.keytab file for host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			else
 				#Capture mssql.keytab klist information
-				logger "Collecting mssql.keytab klist information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "Collecting mssql.keytab klist information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				capture_system_info_command "klist -kte ${SQL_SERVICE_KEYTAB_FILE}" "klist -kte ${SQL_SERVICE_KEYTAB_FILE}"
 				
 				# Capture service account knvo info
-				logger "Collecting service account kvno information from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "Collecting service account kvno information from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				#check if we have mssql.keytab file configured for host instance, the get_host_conf_option and store in var get_host_conf_option_result
 				get_host_conf_option '/var/opt/mssql/mssql.conf' 'network' 'privilegedadaccount' ''
 				SQL_SERVICE_ACCOUNT_KVNO=$get_host_conf_option_result
@@ -175,7 +175,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 				if (systemctl -q is-enabled mssql-server); then
 					SQL_HOST_KRB5_TRACE=$(systemctl cat mssql-server.service | grep KRB5_TRACE | sed -e "s/^Environment=KRB5_TRACE=//")
 					if [ -e "${SQL_HOST_KRB5_TRACE}" ]; then
-						logger "Collecting sql service krb5 trace from host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+						logger "Collecting sql service krb5 trace from host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 						cat "${SQL_HOST_KRB5_TRACE}" > $outputdir/${HOSTNAME}_host_instance_$(basename ${SQL_HOST_KRB5_TRACE})
 					fi
 				fi
@@ -187,19 +187,19 @@ fi
 #Collect informaiton if we are running inside container
 if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 	#Collecting errorlog* system_health*.xel log*.trc
-	linuxdiag_inside_container_get_instance_status
+	sqllogscout_inside_container_get_instance_status
 	if [ "${is_instance_inside_container_active}" == "YES" ]; then
-		logger "Collecting AD logs from inside container instance ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+		logger "Collecting AD logs from inside container instance ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		if [ ! -e "/var/opt/mssql/secrets/mssql.keytab" ]; then
 			#check if krb5 logging was enabled at service level for instance
 			SQL_INSTANCE_KRB5_TRACE=$(env | grep KRB5_TRACE | sed -e "s/^KRB5_TRACE=//")
 			if [ -e "${SQL_INSTANCE_KRB5_TRACE}" ]; then
-				logger "Collecting sql service krb5 trace from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "Collecting sql service krb5 trace from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				cat "${SQL_INSTANCE_KRB5_TRACE}" > $outputdir/${HOSTNAME}_instance_$(basename ${SQL_INSTANCE_KRB5_TRACE})
 			fi
 
 			if [ -e "/etc/krb5.conf" ]; then
-				logger "Collecting sql service krb5.conf from instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+				logger "Collecting sql service krb5.conf from instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				cat /etc/krb5.conf > $outputdir/${HOSTNAME}_instance_krb5.conf
 			fi
 		fi

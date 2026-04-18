@@ -3,7 +3,7 @@
 #    machineconfig.sh  
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 # capture_system_info_command()
 #
@@ -132,7 +132,7 @@ function capture_host_instance_service_mem_map_info()
 
 #Starting the script
 
-CONFIG_FILE="./linuxdiag_collector.conf"
+CONFIG_FILE="./sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -157,13 +157,13 @@ else
     fi
 fi
 
-linuxdiag_log="$outputdir/linuxdiag.log"
+sqllogscout_log="$outputdir/sqllogscout.log"
 
-logger "Collecting machineconfig log collectors" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting machineconfig log collectors" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 # Capture basic system information
 infolog_filename=$outputdir/${HOSTNAME}_os_machine_config.info
-logger "Collecting host configuration" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting host configuration" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 capture_system_info
 
 #workaround NexusLinuxImporter
@@ -171,12 +171,12 @@ cp $infolog_filename $outputdir/${HOSTNAME}_machineconfig.info
 
 #Capture Network info
 infolog_filename=$outputdir/${HOSTNAME}_os_network.info
-logger "Collecting TCP/IP information and resolv.conf" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting TCP/IP information and resolv.conf" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 Capture_network_info
 
 # Capture Disk info
 infolog_filename=$outputdir/${HOSTNAME}_os_Disk_config.info
-logger "Collecting disk information" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting disk information" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 capture_disk_info
 
 
@@ -190,7 +190,7 @@ if [[ $COLLECT_CONTAINER != [Nn][Oo] ]] ; then
             local_container_sql_Parent_pid=$(docker inspect -f '{{.State.Pid}} {{.Name}}' $pid | tr -d '/' | awk '{print $1}')
             dockername=$(docker inspect -f '{{.State.Pid}} {{.Name}}' $pid | tr -d '/' | awk '{print $2}')
             container_sql_child_pid=$(pgrep -P $local_container_sql_Parent_pid | head -n 1)
-            logger "Collecting sqlservr process information for container instance : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "Collecting sqlservr process information for container instance : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
             infolog_filename=$outputdir/${dockername}_container_instance_${container_sql_child_pid}_process.info
             capture_container_instance_process_info
         done
@@ -199,7 +199,7 @@ if [[ $COLLECT_CONTAINER != [Nn][Oo] ]] ; then
             local_container_sql_Parent_pid=$(docker inspect -f '{{.State.Pid}} {{.Name}}' $pid | tr -d '/' | awk '{print $1}')
             dockername=$(docker inspect -f '{{.State.Pid}} {{.Name}}' $pid | tr -d '/' | awk '{print $2}')
             container_sql_child_pid=$(pgrep -P $local_container_sql_Parent_pid | head -n 1)
-            logger "Collecting sqlservr process memory map for container instance : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "Collecting sqlservr process memory map for container instance : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
             infolog_filename=$outputdir/${dockername}_container_instance_${container_sql_child_pid}_process_mem_map_info
             capture_container_instance_process_mem_map_info
         done
@@ -210,21 +210,21 @@ fi
 get_host_instance_status
 if [ "${is_host_instance_service_active}" == "YES" ]; then
     pid=$(pgrep -P $(systemctl show --property MainPID --value mssql-server.service | head -n 1))
-    logger "Collecting sqlservr process information for host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting sqlservr process information for host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     infolog_filename=$outputdir/${HOSTNAME}_host_instance_${pid}_process.info
     capture_host_instance_service_info
-    logger "Collecting sqlservr process memory map for host instance : ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Collecting sqlservr process memory map for host instance : ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     infolog_filename=$outputdir/${HOSTNAME}_host_instance_${pid}_process.process_mem_map_info
     capture_host_instance_service_mem_map_info
 fi
 
 
 #Capture process list info
-logger "Collecting process list information" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting process list information" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 ps -aux --sort -rss >> $outputdir/${HOSTNAME}_os_processlist.info
 
 #Capture Cgroups top by memory and sql services
-logger "Collecting CGroup top usage" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Collecting CGroup top usage" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 echo "======System totals======" >> $outputdir/${HOSTNAME}_os_systemd_cgroup_top.info
 free -h >> $outputdir/${HOSTNAME}_os_systemd_cgroup_top.info

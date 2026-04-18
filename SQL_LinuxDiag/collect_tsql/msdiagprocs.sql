@@ -1693,12 +1693,12 @@ CREATE PROC dbo.sp_trace07 @OnOff varchar(3)='/?', @FileName sysname=NULL, @Trac
 @IncludeUserFilter sysname=NULL, @ExcludeUserFilter sysname=NULL,
 @MinWriteFilter int=0, @MaxWriteFilter int=0,
 @MinSeverityFilter int=0, @MaxSeverityFilter int=0,
-@IncludeHostFilter sysname=NULL, @ExcludeHostFilter sysname='LINUXDIAG%',
+@IncludeHostFilter sysname=NULL, @ExcludeHostFilter sysname='sqllogscout%',
 @IncludeHpIdFilter int=NULL,
 @IncludeIndIdFilter int=NULL,
 @IncludeNTDomainFilter sysname=NULL, @ExcludeNTDomainFilter sysname=NULL,
 @IncludeSysobjectsFilter int=NULL,
-@AppName sysname='LINUXDIAG'
+@AppName sysname='sqllogscout'
 AS
 if is_member('sysadmin')=0 begin
   print 'Must be a member of the sysadmin group in order to run this procedure'
@@ -1725,11 +1725,11 @@ DECLARE @OldFileName sysname -- Output file for currently trace
 
 -- Stop the trace if running
 PRINT 'Stopping the trace if it is running...'
-IF OBJECT_ID('tempdb.dbo.LINUXDIAGTraceQueue') IS NOT NULL BEGIN
-  IF EXISTS(SELECT * FROM tempdb.dbo.LINUXDIAGTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName) BEGIN
+IF OBJECT_ID('tempdb.dbo.sqllogscoutTraceQueue') IS NOT NULL BEGIN
+  IF EXISTS(SELECT * FROM tempdb.dbo.sqllogscoutTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName) BEGIN
 
     SELECT @OldQueueHandle = QueueHandle, @OldFileName= QueueFile
-    FROM tempdb.dbo.LINUXDIAGTraceQueue
+    FROM tempdb.dbo.sqllogscoutTraceQueue
     WHERE QueueName = @TraceName
     AND AppName=@AppName
 
@@ -1737,7 +1737,7 @@ IF OBJECT_ID('tempdb.dbo.LINUXDIAGTraceQueue') IS NOT NULL BEGIN
       EXEC master..xp_trace_destroyqueue @OldQueueHandle
       PRINT 'Deleted trace: ' + @TraceName+', Queue: '+CAST(@OldQueueHandle AS varchar)+'.'
       PRINT 'The trace output file name is: '+@OldFileName+'.'
-      DELETE tempdb.dbo.LINUXDIAGTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName
+      DELETE tempdb.dbo.sqllogscoutTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName
     END
   END ELSE PRINT 'No active traces named '+@TraceName
 END ELSE PRINT 'No active traces.'
@@ -1761,14 +1761,14 @@ IF @Cols IS NULL
 EXEC master..xp_trace_addnewqueue 11000, 10000, 95, 90, @Cols, @QueueHandle output
 
 -- Record the trace queue handle for subsequent jobs.  (This allows us to know how to stop our trace.)
-IF OBJECT_ID('tempdb.dbo.LINUXDIAGTraceQueue') IS NULL BEGIN
-  CREATE TABLE tempdb.dbo.LINUXDIAGTraceQueue (QueueHandle int, QueueName sysname, QueueFile sysname, AppName sysname )
-  INSERT tempdb.dbo.LINUXDIAGTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
+IF OBJECT_ID('tempdb.dbo.sqllogscoutTraceQueue') IS NULL BEGIN
+  CREATE TABLE tempdb.dbo.sqllogscoutTraceQueue (QueueHandle int, QueueName sysname, QueueFile sysname, AppName sysname )
+  INSERT tempdb.dbo.sqllogscoutTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
 END ELSE BEGIN
-  IF EXISTS(SELECT * FROM tempdb.dbo.LINUXDIAGTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName) BEGIN
-    UPDATE tempdb.dbo.LINUXDIAGTraceQueue SET QueueHandle = @QueueHandle WHERE QueueName = @TraceName AND AppName=@AppName
+  IF EXISTS(SELECT * FROM tempdb.dbo.sqllogscoutTraceQueue WHERE QueueName = @TraceName AND AppName=@AppName) BEGIN
+    UPDATE tempdb.dbo.sqllogscoutTraceQueue SET QueueHandle = @QueueHandle WHERE QueueName = @TraceName AND AppName=@AppName
   END ELSE BEGIN
-    INSERT tempdb.dbo.LINUXDIAGTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
+    INSERT tempdb.dbo.sqllogscoutTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
   END
 END
 
@@ -2196,7 +2196,7 @@ CREATE PROC dbo.sp_trace08 @OnOff varchar(4)='/?',
 @IncludeHostFilter sysname=NULL, @ExcludeHostFilter sysname=NULL, 
 @IncludeSpidFilter int=NULL, @ExcludeSpidFilter int=NULL,  
 @TraceId int = NULL,
-@AppName sysname='LINUXDIAG'
+@AppName sysname='sqllogscout'
 AS
 if is_member('sysadmin')=0 begin
   print 'Must be a member of the sysadmin group in order to run this procedure'
@@ -2208,16 +2208,16 @@ IF @OnOff='/?' GOTO Help
 
 SET @OnOff=UPPER(@OnOff)
 IF (@OnOff='LIST') BEGIN
-	IF (OBJECT_ID('tempdb..LINUXDIAGTraceQueue') IS NOT NULL) BEGIN
+	IF (OBJECT_ID('tempdb..sqllogscoutTraceQueue') IS NOT NULL) BEGIN
 		IF (@TraceId IS NULL) BEGIN
-			DECLARE tc CURSOR FOR SELECT * FROM tempdb..LINUXDIAGTraceQueue WHERE AppName=@AppName FOR READ ONLY
+			DECLARE tc CURSOR FOR SELECT * FROM tempdb..sqllogscoutTraceQueue WHERE AppName=@AppName FOR READ ONLY
 			DECLARE @tid int, @tname varchar(20), @tfile sysname
 			OPEN tc
 			FETCH tc INTO @tid, @tname, @tfile
 			IF @@ROWCOUNT<>0 BEGIN
 						WHILE @@FETCH_STATUS=0 BEGIN
 	   						SELECT TraceId, TraceName, TraceFile 
-	   						FROM tempdb..LINUXDIAGTraceQueue WHERE TraceId=@tid
+	   						FROM tempdb..sqllogscoutTraceQueue WHERE TraceId=@tid
 	   						
 							SELECT * FROM ::fn_trace_getinfo(@tid)		
 							
@@ -2228,7 +2228,7 @@ IF (@OnOff='LIST') BEGIN
 			DEALLOCATE tc
 		END ELSE BEGIN
 			SELECT TraceId, TraceName, TraceFile 
-			FROM tempdb..LINUXDIAGTraceQueue WHERE TraceId=@TraceId
+			FROM tempdb..sqllogscoutTraceQueue WHERE TraceId=@TraceId
 			SELECT * FROM ::fn_trace_getinfo(@TraceId)		
 	  END
 	END ELSE PRINT 'No traces to list.'
@@ -2245,11 +2245,11 @@ DECLARE @res int -- Result var for sp calls
 SET @On=1
 
 -- Stop the trace if running
-IF OBJECT_ID('tempdb..LINUXDIAGTraceQueue') IS NOT NULL BEGIN
-  IF EXISTS(SELECT * FROM tempdb..LINUXDIAGTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName) BEGIN
+IF OBJECT_ID('tempdb..sqllogscoutTraceQueue') IS NOT NULL BEGIN
+  IF EXISTS(SELECT * FROM tempdb..sqllogscoutTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName) BEGIN
 
     SELECT @OldQueueHandle = TraceId, @OldTraceFile=TraceFile
-    FROM tempdb..LINUXDIAGTraceQueue
+    FROM tempdb..sqllogscoutTraceQueue
     WHERE TraceName = @TraceName
     AND AppName=@AppName
 
@@ -2258,7 +2258,7 @@ IF OBJECT_ID('tempdb..LINUXDIAGTraceQueue') IS NOT NULL BEGIN
       EXEC sp_trace_setstatus @TraceId=@OldQueueHandle, @status=2
       PRINT 'Deleted trace queue ' + CAST(@OldQueueHandle AS varchar(20))+'.'
       PRINT 'The trace output file name is: '+@OldTraceFile+'.trc.'
-      DELETE tempdb..LINUXDIAGTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName
+      DELETE tempdb..sqllogscoutTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName
     END
   END ELSE PRINT 'No active traces named '+@TraceName+' for '+@AppName+'.'
 END ELSE PRINT 'No active traces.'
@@ -2426,14 +2426,14 @@ IF @ExcludeSpidFilter IS NOT NULL EXEC sp_trace_setfilter @TraceId=@QueueHandle,
 EXEC sp_trace_setstatus @TraceId=@QueueHandle, @status=1
 
 -- Record the trace queue handle for subsequent jobs.  (This allows us to know how to stop our trace.)
-IF OBJECT_ID('tempdb..LINUXDIAGTraceQueue') IS NULL BEGIN
-  CREATE TABLE tempdb..LINUXDIAGTraceQueue (TraceId int, TraceName varchar(20), TraceFile sysname, AppName sysname)
-  INSERT tempdb..LINUXDIAGTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
+IF OBJECT_ID('tempdb..sqllogscoutTraceQueue') IS NULL BEGIN
+  CREATE TABLE tempdb..sqllogscoutTraceQueue (TraceId int, TraceName varchar(20), TraceFile sysname, AppName sysname)
+  INSERT tempdb..sqllogscoutTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
 END ELSE BEGIN
-  IF EXISTS(SELECT * FROM tempdb..LINUXDIAGTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName) BEGIN
-    UPDATE tempdb..LINUXDIAGTraceQueue SET TraceId = @QueueHandle, TraceFile=@FileName WHERE TraceName = @TraceName AND AppName=@AppName
+  IF EXISTS(SELECT * FROM tempdb..sqllogscoutTraceQueue WHERE TraceName = @TraceName AND AppName=@AppName) BEGIN
+    UPDATE tempdb..sqllogscoutTraceQueue SET TraceId = @QueueHandle, TraceFile=@FileName WHERE TraceName = @TraceName AND AppName=@AppName
   END ELSE BEGIN
-    INSERT tempdb..LINUXDIAGTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
+    INSERT tempdb..sqllogscoutTraceQueue VALUES(@QueueHandle, @TraceName, @FileName, @AppName)
   END
 END
 RETURN 0
@@ -2458,7 +2458,7 @@ PRINT @crlf+@tabc+'@ExcludeTextFilter  sysname      default: NULL -- String mask
 PRINT @crlf+@tabc+'@IncludeObjIdFilter sysname      default: NULL -- Specifies the id of an object to target with the trace'
 PRINT @crlf+@tabc+'@ExcludeObjIdFilter sysname      default: NULL -- Specifies the id of an object to exclude from the trace'
 PRINT @crlf+@tabc+'@TraceId            int          default: NULL -- Specified the id of the trace to list when you specify the LIST option to @OnOff'
-PRINT @crlf+@tabc+'@AppName            sysname      default: LINUXDIAG -- Specifies the name of the calling application'
+PRINT @crlf+@tabc+'@AppName            sysname      default: sqllogscout -- Specifies the name of the calling application'
 PRINT @crlf+'Examples: '
 PRINT @crlf+@tabc+'EXEC sp_trace -- Displays this help text'
 PRINT @crlf+@tabc+'EXEC sp_trace ''ON'' -- Starts a trace'
@@ -4037,7 +4037,7 @@ GO
 PRINT ''
 RAISERROR ('===== Creating sp_sqldiag_cleanup07', 0, 1) WITH NOWAIT
 GO
-CREATE PROC dbo.sp_sqldiag_cleanup07 @AppName sysname='LINUXDIAG'
+CREATE PROC dbo.sp_sqldiag_cleanup07 @AppName sysname='sqllogscout'
 AS
 if is_member('sysadmin')=0 begin
   print 'Must be a member of the sysadmin group in order to run this procedure'
@@ -4242,10 +4242,10 @@ GO
 IF (CHARINDEX('12.0.',@@VERSION)<>0) AND (OBJECT_ID('dbo.sp_sqldiag_cleanup12') IS NULL) 
 	RAISERROR('Error creating sp_sqldiag_cleanup12',16,127)
 GO
-create procedure sp_killlinuxdiagSessions
+create procedure sp_killsqllogscoutSessions
 as
 declare curSession
-CURSOR for select 'kill ' + cast( session_id as varchar(max)) from sys.dm_exec_sessions where host_name = 'linuxdiag' and program_name='SQLCMD' and session_id <> @@spid
+CURSOR for select 'kill ' + cast( session_id as varchar(max)) from sys.dm_exec_sessions where host_name = 'sqllogscout' and program_name='SQLCMD' and session_id <> @@spid
 open curSession
 declare @sql varchar(max)
 fetch next from curSession into @sql

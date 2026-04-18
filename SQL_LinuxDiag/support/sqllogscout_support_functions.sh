@@ -4,7 +4,7 @@ script_version="20260501"
 MSSQL_CONF="/var/opt/mssql/mssql.conf"
 outputdir="$PWD/output"
 #SQL_LOG_DIR=${SQL_LOG_DIR:-"/var/opt/mssql/log"}
-linuxdiag_log="$outputdir/linuxdiag.log"
+sqllogscout_log="$outputdir/sqllogscout.log"
 
 # Arguments:
 #   1. Title
@@ -161,8 +161,8 @@ get_container_instance_status()
     fi
 }
 
-#when linuxdiag is running inside, kubernetes, pod or container. get the status
-linuxdiag_inside_container_get_instance_status()
+#when sqllogscout is running inside, kubernetes, pod or container. get the status
+sqllogscout_inside_container_get_instance_status()
 {
     # Default result.
     is_instance_inside_container_active="NO"
@@ -240,7 +240,7 @@ get_servicemanager_and_sqlservicestatus()
 
 	get_host_instance_status
 	get_container_instance_status
-	linuxdiag_inside_container_get_instance_status
+	sqllogscout_inside_container_get_instance_status
 
   #Check if sql is running in host 
 	if [[ "${1}" == "host_instance" ]] && [[ "${is_host_instance_service_installed}" == "YES" ]]; then
@@ -276,7 +276,7 @@ sql_connect()
 	get_servicemanager_and_sqlservicestatus ${1} ${2}
 
   if [[ "$attempt_num" -eq 1 ]] ; then 
-    logger "Starting connectivity routine" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Starting connectivity routine" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
   fi
 
 	if [[ "${sqlservicestatus}" == "unknown" ]]; then
@@ -287,7 +287,7 @@ sql_connect()
 	CONN_AUTH_OPTIONS=''
 	sqlconnect=0
 
-	#force SQL Authentication when LinuxDiag is running from inside Container
+	#force SQL Authentication when sqllogscout is running from inside Container
 	if [[ $is_instance_inside_container_active == "YES" ]]; then auth_mode="SQL"; fi
 
 	#if the user selected NONE Mode, ask then about what they need to use to this instance we are trying to connect to
@@ -307,16 +307,16 @@ sql_connect()
 	if ( command -v klist 2>&1 >/dev/null ); then 
 		check_ad_cache=$(klist -l | tail -n +3 | awk '!/Expired/' | wc -l)
 		if [[ "$check_ad_cache" == 0 ]] && [[ "$auth_mode" == "AD" ]]; then
-      logger "AD Authentication was selected as Authentication mode to connect to sql, however, no Kerberos credentials found in default cache, they may have expired" "warn" "1" "0" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-      logger "AD Authentication will fail" "warn" "1" "0" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
-      logger "to correct this, run 'sudo kinit user@DOMAIN.COM' in a separate terminal with AD user that is allowed to connect to sql server, then press enter in this terminal." "warn" "1" "0" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+      logger "AD Authentication was selected as Authentication mode to connect to sql, however, no Kerberos credentials found in default cache, they may have expired" "warn" "1" "0" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+      logger "AD Authentication will fail" "warn" "1" "0" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
+      logger "to correct this, run 'sudo kinit user@DOMAIN.COM' in a separate terminal with AD user that is allowed to connect to sql server, then press enter in this terminal." "warn" "1" "0" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
       echo ""
       read -p "Press enter to continue..." < /dev/tty 2> /dev/tty
       echo ""
 		fi
 	fi
 
-  logger "Establishing SQL connection to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+  logger "Establishing SQL connection to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	
 	#Test SQL Authentication, we allow them to try few times using SQL Auth
 	if [[ $auth_mode = "SQL" ]]; then
@@ -345,18 +345,18 @@ sql_connect()
 			if [[ $? -eq 0 ]]; then
 				sqlconnect=1
         echo ""
-        logger "Successfully connected to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info_green" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Successfully connected to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info_green" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				sql_ver=$("$SQLCMD" -S$SQL_SERVER_NAME -U$XsrX -P$XssX -C -Q"PRINT CONVERT(NVARCHAR(128), SERVERPROPERTY('ProductVersion'))")
-        logger "SQL Server version  ${sql_ver}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "SQL Server version  ${sql_ver}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 				CONN_AUTH_OPTIONS="-U$XsrX -P$XssX"
 				break
 			else
         echo ""
         #in case there is login fails, get each line of the error and log it
         while IFS= read -r line; do
-            logger "${line}" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "${line}" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         done <<< "$error_output"
-        logger "SQL login failed for ${1} ${2}, refer to the above lines for errors, Attempt ${attempt_num} of ${MAX_ATTEMPTS}, Please try again" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "SQL login failed for ${1} ${2}, refer to the above lines for errors, Attempt ${attempt_num} of ${MAX_ATTEMPTS}, Please try again" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			fi
 			attempt_num=$(( attempt_num + 1 ))
 		done
@@ -374,17 +374,17 @@ sql_connect()
     	if [[ $? -eq 0 ]]; then   	
         sqlconnect=1;
         CONN_AUTH_OPTIONS='-E'
-        logger "Successfully connected to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info_green" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Successfully connected to ${1} ${2} on port ${3} using ${auth_mode} authentication" "info_green" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         sql_ver=$("$SQLCMD" -S$SQL_SERVER_NAME -E -C -Q"PRINT CONVERT(NVARCHAR(128), SERVERPROPERTY('ProductVersion'))")
-        logger "SQL Server version  ${sql_ver}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "SQL Server version  ${sql_ver}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 		  else
         #in case AD Authentication fails, get each line of the error and log it
         while IFS= read -r line; do
-            logger "${line}" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+            logger "${line}" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         done <<< "$error_output"
-        logger "AD Authentication failed for ${1} ${2}, refer to the above lines for errors" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "AD Authentication failed for ${1} ${2}, refer to the above lines for errors" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         #Switch to SQL Authentication
-        logger "Switching to SQL Authentication for ${1} ${2}" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Switching to SQL Authentication for ${1} ${2}" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
         sql_connect ${1} ${2} ${3} "SQL"
 		fi
 	fi
@@ -402,12 +402,12 @@ if [[ "$1" == "host_instance" ]]; then
         if [[ "${FILE_EXISTS}" == "exists" ]]; then
                 logdir=`cat ${MSSQL_CONF} | grep -i ${CONFIG_NAME} | sed 's/ *= */=/g' | awk -F '=' '{ print $2}'`
                 if [[ ${logdir} != "" ]] ; then
-                        echo "${logdir}" | tee -a $linuxdiag_log
+                        echo "${logdir}" | tee -a $sqllogscout_log
                 else
-                        echo "${DEFAULT_VALUE}" | tee -a $linuxdiag_log
+                        echo "${DEFAULT_VALUE}" | tee -a $sqllogscout_log
                 fi
         else
-                echo "${DEFAULT_VALUE}" | tee -a $linuxdiag_log
+                echo "${DEFAULT_VALUE}" | tee -a $sqllogscout_log
         fi
 fi
 
@@ -417,12 +417,12 @@ if [[ "$1" == "container_instance" ]]; then
                 logdirline=$(docker exec ${3} sh -c "cat ${MSSQL_CONF} | grep -i ${CONFIG_NAME}")
                 logdir=`echo ${tcpportline} | sed 's/ *= */=/g' | awk -F '=' '{ print $2}'`
                 if [[ ${logdir} != "" ]] ; then
-                        echo "${logdir}" | tee -a $linuxdiag_log
+                        echo "${logdir}" | tee -a $sqllogscout_log
                 else
-                        echo "${DEFAULT_VALUE}" | tee -a $linuxdiag_log
+                        echo "${DEFAULT_VALUE}" | tee -a $sqllogscout_log
                 fi
         else
-                echo "${DEFAULT_VALUE}" | tee -a $linuxdiag_log
+                echo "${DEFAULT_VALUE}" | tee -a $sqllogscout_log
         fi
 fi
 }
@@ -453,12 +453,12 @@ get_host_conf_option()
   done < $1
 
   if [ "${get_host_conf_option_result}" ]; then
-    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is set to : ${get_host_conf_option_result}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is set to : ${get_host_conf_option_result}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
   elif [ "${4}" == "NA" ]; then
-    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is not set in the conf file, no default for this setting" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is not set in the conf file, no default for this setting" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     get_host_conf_option_result="NA"
   else
-    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is not set in the conf file, using the default : ${4}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Host instance ${HOSTNAME} conf file ${1} setting option [${2}] ${3} is not set in the conf file, using the default : ${4}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     get_host_conf_option_result=${4}
   fi
 }
@@ -471,7 +471,7 @@ get_docker_conf_option()
   unset get_docker_conf_option_result
   unset config_section_found
 
-  tmpcontainertmpfile="./$(uuidgen).linuxdiag.mssql.conf.tmp"
+  tmpcontainertmpfile="./$(uuidgen).sqllogscout.mssql.conf.tmp"
   echo "$(docker exec --user root ${5} sh -c "cat ${1}")" > "$tmpcontainertmpfile"
 
   while IFS= read -r line; do
@@ -496,12 +496,12 @@ get_docker_conf_option()
   rm "$tmpcontainertmpfile"
   
   if [ "${get_docker_conf_option_result}" ]; then
-    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is set to : ${get_docker_conf_option_result}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is set to : ${get_docker_conf_option_result}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
   elif [ "${4}" == "NA" ]; then
-    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is not set in the conf file, no default for this setting" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is not set in the conf file, no default for this setting" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     get_docker_conf_option_result="NA"
   else
-    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is not set in the conf file, using the default : ${4}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Container instance ${5} conf file ${1} setting option [${2}] ${3} is not set in the conf file, using the default : ${4}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
     get_docker_conf_option_result=${4}
   fi
 }
@@ -544,9 +544,9 @@ validate_scenario_file() {
   allowed_values[COLLECT_LINUX_PERFSTATS]="^(yes|no)$"
   allowed_values[CUSTOM_COLLECTOR]="^(yes|no)$"
   allowed_values[COLLECT_EXTENDED_EVENTS]="^(yes|no)$"
-  allowed_values[EXTENDED_EVENT_TEMPLATE]="^(linuxdiag_xevent_lite|linuxdiag_xevent_general|linuxdiag_xevent_detailed)$"
+  allowed_values[EXTENDED_EVENT_TEMPLATE]="^(sqllogscout_xevent_lite|sqllogscout_xevent_general|sqllogscout_xevent_detailed)$"
   allowed_values[COLLECT_SQL_TRACE]="^(yes|no)$"
-  allowed_values[SQL_TRACE_TEMPLATE]="^(linuxdiag_trace_lite|linuxdiag_trace_general|linuxdiag_trace_detailed|linuxdiag_trace_replication)$"
+  allowed_values[SQL_TRACE_TEMPLATE]="^(sqllogscout_trace_lite|sqllogscout_trace_general|sqllogscout_trace_detailed|sqllogscout_trace_replication)$"
 
   # Keep this (used for "missing" pass)
   allowed_vars=("${!allowed_values[@]}")
@@ -581,9 +581,9 @@ validate_scenario_file() {
   default_values[COLLECT_LINUX_PERFSTATS]="NO"
   default_values[CUSTOM_COLLECTOR]="NO"
   default_values[COLLECT_EXTENDED_EVENTS]="NO"
-  default_values[EXTENDED_EVENT_TEMPLATE]="linuxdiag_xevent_lite"
+  default_values[EXTENDED_EVENT_TEMPLATE]="sqllogscout_xevent_lite"
   default_values[COLLECT_SQL_TRACE]="NO"
-  default_values[SQL_TRACE_TEMPLATE]="linuxdiag_trace_lite"
+  default_values[SQL_TRACE_TEMPLATE]="sqllogscout_trace_lite"
 
   # User-friendly descriptions (used in messages)
   declare -A valid_desc
@@ -615,9 +615,9 @@ validate_scenario_file() {
   valid_desc[COLLECT_LINUX_PERFSTATS]="yes, no"
   valid_desc[CUSTOM_COLLECTOR]="yes, no"
   valid_desc[COLLECT_EXTENDED_EVENTS]="yes, no"
-  valid_desc[EXTENDED_EVENT_TEMPLATE]="linuxdiag_xevent_lite, linuxdiag_xevent_general, linuxdiag_xevent_detailed"
+  valid_desc[EXTENDED_EVENT_TEMPLATE]="sqllogscout_xevent_lite, sqllogscout_xevent_general, sqllogscout_xevent_detailed"
   valid_desc[COLLECT_SQL_TRACE]="yes, no"
-  valid_desc[SQL_TRACE_TEMPLATE]="linuxdiag_trace_lite, linuxdiag_trace_general, linuxdiag_trace_detailed, linuxdiag_trace_replication"
+  valid_desc[SQL_TRACE_TEMPLATE]="sqllogscout_trace_lite, sqllogscout_trace_general, sqllogscout_trace_detailed, sqllogscout_trace_replication"
 
   # Extract variables and values from the file
   while IFS='=' read -r var val; do
@@ -627,7 +627,7 @@ validate_scenario_file() {
 
     # CHECK1: Check for unknown settings.
     if [[ ! -v "allowed_values[$var]" ]]; then
-      logger "Invalid setting found '$var' in scenario file; this setting will be ignored" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+      logger "Invalid setting found '$var' in scenario file; this setting will be ignored" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
       continue
     fi
 
@@ -636,12 +636,12 @@ validate_scenario_file() {
     val_lc="$(echo "$val" | tr '[:upper:]' '[:lower:]')"
     if ! [[ "$val_lc" =~ $regex ]]; then
       if [[ "$var" == "COLLECT_CONTAINER" ]]; then
-        logger "Invalid value for $var: '$val'. Acceptable values are: ALL, or a container NAME (not ID)" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Invalid value for $var: '$val'. Acceptable values are: ALL, or a container NAME (not ID)" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
       elif [[ "$var" == "OS_COUNTERS_INTERVAL" || "$var" == "SQL_COUNTERS_INTERVAL" ]]; then
-        logger "Invalid value for $var: '$val'. Must be a positive integer (>0)" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Invalid value for $var: '$val'. Must be a positive integer (>0)" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
       else
         valid_upper=$(echo "${valid_desc[$var]}" | tr '[:lower:]' '[:upper:]')
-        logger "Invalid value for $var: '$val'. Valid values are: $valid_upper" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+        logger "Invalid value for $var: '$val'. Valid values are: $valid_upper" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
       fi
       invalid=1
     fi
@@ -652,7 +652,7 @@ validate_scenario_file() {
   counter=0
   for var in "${allowed_vars[@]}"; do
     if ! grep -q "^[[:space:]]*$var=" "$file"; then
-      logger "Scenario file is missing '$var' setting; will apply the default value '${default_values[$var]}'" "warn" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+      logger "Scenario file is missing '$var' setting; will apply the default value '${default_values[$var]}'" "warn" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	  ((counter++))
     fi
   done
@@ -660,13 +660,13 @@ validate_scenario_file() {
   # CHECK4: At least one of the following settings is present COLLECT_HOST_SQL_INSTANCE and COLLECT_CONTAINER, 
   if ! grep -iq "^[[:space:]]*COLLECT_HOST_SQL_INSTANCE=" "$file" && ! grep -iq "^[[:space:]]*COLLECT_CONTAINER=" "$file"; then
 	invalid=1
-    logger "Scenario file is missing 'COLLECT_HOST_SQL_INSTANCE' and 'COLLECT_CONTAINER' settings; at least one of them must be present" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Scenario file is missing 'COLLECT_HOST_SQL_INSTANCE' and 'COLLECT_CONTAINER' settings; at least one of them must be present" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
   fi
 
   # CHECK5: At least one of the following settings has value to collect,  COLLECT_HOST_SQL_INSTANCE and COLLECT_CONTAINER, at least one of them must be present
   if ! grep -iq "^[[:space:]]*COLLECT_HOST_SQL_INSTANCE=YES" "$file" && ! grep -iqE "^[[:space:]]*COLLECT_CONTAINER=(ALL|[a-z0-9_-]+)" "$file"; then
     invalid=1
-    logger "Both 'COLLECT_HOST_SQL_INSTANCE' and 'COLLECT_CONTAINER' are set incorrectly; at least one must be 'YES', 'ALL', or a valid container name" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+    logger "Both 'COLLECT_HOST_SQL_INSTANCE' and 'COLLECT_CONTAINER' are set incorrectly; at least one must be 'YES', 'ALL', or a valid container name" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
   fi
 
   # CHECK6: At least we must have one collector setting set to YES
@@ -700,13 +700,13 @@ validate_scenario_file() {
  done
 
  if (( minimum_collectors == 0)); then
-     logger "None of log collectors is set to YES, at least one log or trace collector needs to be set to YES" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+     logger "None of log collectors is set to YES, at least one log or trace collector needs to be set to YES" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	 invalid=1
  fi
 
   # CHECK7: If all variables are missing, likely an invalid file
   if (( counter == 30 )); then
-  logger "there are no valid settings defined in the scenario file specified" "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+  logger "there are no valid settings defined in the scenario file specified" "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 	invalid=1
   fi
 
@@ -721,7 +721,7 @@ logger()
   local level="${2:-info}"  # Default level is 'info' if not provided
   local log_console="${3:-1}" # Default is 1, output to console, 0 means do not output to console
   local log_logfile="${4:-1}" # Default is 1, output to logfile, 0 means do not output to logfile
-  local logfile="${5:-${linuxdiag_log:-/dev/null}}" # Default to linuxdiag_log if not provided
+  local logfile="${5:-${sqllogscout_log:-/dev/null}}" # Default to sqllogscout_log if not provided
   local scriptfile="${6}" # Get the script name for logging
   local surround_char="${7:-=}" # Default surround char for header is '='
   local surround_type="${8:-0}" # Default surround type for header is '0' full surround, 1=side surround.

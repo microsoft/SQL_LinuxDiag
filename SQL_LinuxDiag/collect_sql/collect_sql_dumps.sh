@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 collect_docker_dumps()
 {
@@ -9,7 +9,7 @@ collect_docker_dumps()
 dockerid=$1
 dockername=$2
 
-logger "collecting dumps from container : $dockername" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "collecting dumps from container : $dockername" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 docker_has_mssqlconf=$(docker exec --user root ${dockername} sh -c "(ls /var/opt/mssql/mssql.conf >> /dev/null 2>&1 && echo YES) || echo NO")
 if [[ "${docker_has_mssqlconf}" == "YES" ]]; then
@@ -24,7 +24,7 @@ docker exec $dockerid sh -c "rm -f /tmp/sql_dumps.tar"
 }
 
 #Starting the script
-logger "Starting sql dumps collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting sql dumps collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 if [[ -d "$1" ]] ; then
 	outputdir="$1"
@@ -45,7 +45,7 @@ else
 fi
 
 # get container directive from config file
-CONFIG_FILE="./linuxdiag_collector.conf"
+CONFIG_FILE="./sqllogscout_collector.conf"
 if [[ -f $CONFIG_FILE ]]; then
 . $CONFIG_FILE
 fi
@@ -67,7 +67,7 @@ if [[ "$COLLECT_CONTAINER" != [Nn][Oo] ]]; then
 			if [ $dockerid ]; then
 				collect_docker_dumps $dockerid $dockername
 			else
-				logger "Container not found : $dockername..." "error" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}"
+				logger "Container not found : $dockername..." "error" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}"
 			fi
 		else
 			# we need to iterate through all containers
@@ -94,7 +94,7 @@ if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
 			SQL_DUMP_DIR="/var/opt/mssql/log"
 		fi
 		if [ -d "$SQL_DUMP_DIR" ]; then
-			logger "Collecting dumps for host instance ${HOSTNAME}" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting dumps for host instance ${HOSTNAME}" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			sh -c "cd ${SQL_DUMP_DIR} && tar -cf ${outputdir}/${HOSTNAME}_host_instance_sql_dumps.tar SQLDump*.* *core.sqlservr.* SQLDUMPER* 2>/dev/null"
 		fi
 	fi
@@ -103,11 +103,11 @@ fi
 #Collect informaiton if we are running inside container
 if [[ "$COLLECT_HOST_SQL_INSTANCE" = [Yy][Ee][Ss] ]]; then
     #Collect dumps if we are running inside container
-	linuxdiag_inside_container_get_instance_status
+	sqllogscout_inside_container_get_instance_status
 	if [ "${is_instance_inside_container_active}" == "YES" ]; then
 		SQL_DUMP_DIR="/var/opt/mssql/log"
 		if [ -d "$SQL_DUMP_DIR" ]; then
-			logger "Collecting dumps for instance ${HOSTNAME} inside container" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+			logger "Collecting dumps for instance ${HOSTNAME} inside container" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 			sh -c "cd ${SQL_DUMP_DIR} && tar -cf ${outputdir}/${HOSTNAME}_instance_sql_dumps.tar SQLDump*.* *core.sqlservr.* SQLDUMPER* 2>/dev/null"
 		fi
 	fi

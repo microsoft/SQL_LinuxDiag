@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # include helper functions
-source ./support/linuxdiag_support_functions.sh
+source ./support/sqllogscout_support_functions.sh
 
 #Starting the script
-logger "Starting host OS logs collectors" "info_blue" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+logger "Starting host OS logs collectors" "info_blue" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 #collect SQL errorlogs
 SYSLOGPATH=/var/log
@@ -23,7 +23,7 @@ fi
 
 #Check if I am running on host/systemd
 if (echo "$(readlink /sbin/init)" | grep systemd >/dev/null 2>&1); then
-	logger "Collecting dmesg log, journalctl, system logs" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+	logger "Collecting dmesg log, journalctl, system logs" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 	# Collect dmesg and journalctl logs only if we run with sudo
 	if [ "$EUID" -eq 0 ]; then
@@ -57,9 +57,9 @@ fi
 
 get_servicemanager_and_sqlservicestatus "host_instance"
 
-#supporting the case when LinuxDiag run from within Kubernetes container
+#supporting the case when sqllogscout run from within Kubernetes container
 if [[ "${servicemanager}" == "supervisord" ]]; then
-	logger "Collecting dmesg log, Supervisor, provisioner, agent logs" "info" "1" "1" "${linuxdiag_log:-/dev/null}" "${0##*/}" 
+	logger "Collecting dmesg log, Supervisor, provisioner, agent logs" "info" "1" "1" "${sqllogscout_log:-/dev/null}" "${0##*/}" 
 
 	dmesg > $outputdir/${HOSTNAME}_dmesg.info
 

@@ -1,4 +1,4 @@
 #!/bin/bash
-tar --exclude='./.git' -cvf linuxdiag.tar .
+tar --exclude='./.git' -cvf sqllogscout.tar .
 
 exit 0
