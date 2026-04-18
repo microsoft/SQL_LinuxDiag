@@ -15,8 +15,8 @@ working_dir="$PWD"
 mkdir -p $PWD/output
 outputdir=$PWD/output
 if [ "$EUID" -eq 0 ]; then
-  ORIGINAL_USERNAME=$(logname)
-  ORIGINAL_GROUP=$(id -gn "$ORIGINAL_USERNAME")
+  ORIGINAL_USERNAME=$(logname 2>/dev/null) || ORIGINAL_USERNAME=""
+  ORIGINAL_GROUP=$(id -gn "$ORIGINAL_USERNAME" 2>/dev/null) || ORIGINAL_GROUP=""
   chown "$ORIGINAL_USERNAME:$ORIGINAL_GROUP" "$outputdir" -R
 else
 	chown $(id -u):$(id -g) "$outputdir" -R
