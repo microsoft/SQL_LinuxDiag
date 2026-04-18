@@ -1,4 +1,4 @@
-# SQL Logscout Linux
+# SQL LogScout Linux
 
 [![licence badge]][licence]
 [![stars badge]][stars]
@@ -15,21 +15,23 @@
 [forks]:https://github.com/Microsoft/SQL_logscout/network
 [issues]:https://github.com/Microsoft/SQL_logscout/issues
 
-- [SQL Logscout](#sql-logscout)
+
+- [SQL LogScout Linux](#sql-logscout-linux)
 - [Supported Products](#supported-products)
 - [Prerequisites](#prerequisites)
 - [Scenario Files and Usage Information](#scenario-files-and-usage-information)
 - [Authentication Modes](#authentication-modes)
-- [SQL Logscout Scripts Arguments](#sql-logscout-scripts-arguments)
-- [Downloading and Executing SQL Logscout](#downloading-and-executing-sql-logscout)
+- [SQL LogScout Scripts Arguments](#sql-logscout-scripts-arguments)
+- [Downloading and Executing SQL LogScout](#downloading-and-executing-sql-logscout)
   - [Downloading SQL Logscout](#downloading-sql-logscout)
-  - [Preparing SQL Logscout for Execution](#preparing-sql-logscout-for-execution)
-  - [Starting SQL Logscout](#starting-sql-logscout)
-  - [Stopping SQL Logscout](#stopping-sql-logscout)
-- [Capture Logs from SQL Container Instance Deployed in Kubernetes](#capture-logs-from-sql-container-instance-deployed-in-kubernetes)
-  - [Starting SQL Logscout](#starting-sql-logscout-1)
-  - [Stopping SQL Logscout](#stopping-sql-logscout-1)
-- [License Agreement](#license-agreement)
+  - [Preparing SQL LogScout for Execution](#preparing-sql-logscout-for-execution)
+  - [Starting SQL LogScout](#starting-sql-logscout)
+  - [Stopping SQL LogScout](#stopping-sql-logscout)
+- [Capture logs from SQL Container Instance Deployed in Kubernetes](#capture-logs-from-sql-container-instance-deployed-in-kubernetes)
+  - [Starting SQL LogScout](#starting-sql-logscout-1)
+  - [Stopping SQL LogScout](#stopping-sql-logscout-1)
+- [License Agreement]
+
 
 
 
@@ -82,10 +84,10 @@ Several Linux commands and utilities are necessary for data collection. **syssta
 		- For Ubuntu: `sudo apt install bzip2`
 		- For SUSE: `sudo zypper install bzip2`
   
-When you launch the SQL logscout utility, it checks for these prerequisites and notifies you of any missing commands or utilities. If you don't have all these tools, we may only be able to collect partial diagnostic logs, leading to potentially inconclusive results. Depending on your Linux operating system, you might need to register with the OS vendor to install all the required utilities. Seek assistance from your system administrator to complete these tasks.
+When you launch the SQL LogScout utility, it checks for these prerequisites and notifies you of any missing commands or utilities. If you don't have all these tools, we may only be able to collect partial diagnostic logs, leading to potentially inconclusive results. Depending on your Linux operating system, you might need to register with the OS vendor to install all the required utilities. Seek assistance from your system administrator to complete these tasks.
 
 ## Scenario Files and Usage Information
-You can run only a single copy of SQL logscout utility on a system. If you attempt to launch the second instance, it will provide you with warnings and exit.
+You can run only a single copy of SQL LogScout utility on a system. If you attempt to launch the second instance, it will provide you with warnings and exit.
 All the scripts are tested against bash shell. Please launch the start and stop collector explicitly using /bin/bash
 This utility can collect information and logs for SQL Server instances that are installed as host instance or as container instances.
 
@@ -98,7 +100,7 @@ Depending on the scenario for which you are collecting logs, you may have to jus
 
 This is list of the available scenario:
 
-when running SQL logscout from host machine, SQL logscout will collect information from both host and container instances using one of the following scenarios:
+when running SQL LogScout from host machine, SQL LogScout will collect information from both host and container instances using one of the following scenarios:
 
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
@@ -120,7 +122,7 @@ when running SQL logscout from host machine, SQL logscout will collect informati
 |   |                                   |may impact server performance due to overhead.                                |
 +---+-----------------------------------+------------------------------------------------------------------------------+
 ```
-In the case when SQL container is deployed to Kubernetes, you can run SQL logscout from within the container collect information from the container using one of the following scenarios:
+In the case when SQL container is deployed to Kubernetes, you can run SQL LogScout from within the container collect information from the container using one of the following scenarios:
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
 |No |Scenario file                      |Description                                                                   |
@@ -146,7 +148,7 @@ To review which information is being collected in a scenario, please open the .s
 You can create a custom scenario file by copying an existing one and modifying the settings as needed. Ensure the file is located in the same directory as SQL logscout, and pass it as the first argument when running the start script.
 
 ## Authentication Modes
-SQL logscout can use one of the following Authentication Modes when connecting to SQL server
+SQL LogScout can use one of the following Authentication Modes when connecting to SQL server
 ```
 +---+-----------------------------------+------------------------------------------------------------------------------+
 |No |Authentication Mode                |Description                                                                   |
@@ -168,22 +170,22 @@ sudo kinit user@DOMAIN.COM
 ```
 
 **Note**
-when running SQL logscout from inside the container (the case of Kubernetes) you will only have 'SQL' Authentication Mode.
+when running SQL LogScout from inside the container (the case of Kubernetes) you will only have 'SQL' Authentication Mode.
 
-## SQL Logscout Scripts Arguments 
-SQL logscout has the following argument s
+## SQL LogScout Scripts Arguments 
+SQL LogScout has the following argument s
 
 Starting script `start_collector.sh` accepts 3 arguments 
 - Scenario file: Valid options include any of the scenario files listed above, or a custom scenario you configure with the necessary settings. If any required setting is omitted, it will automatically default to NO or the lightest-weight value applicable for that setting.
-- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL logscout will prompt you to choose an authentication mode.
-- perfstat file, Valid options are sql_perf_stats.sql and sql_perf_stats_lite.sql. If not specified, SQL logscout will default to sql_perf_stats.sql.
+- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL LogScout will prompt you to choose an authentication mode.
+- perfstat file, Valid options are sql_perf_stats.sql and sql_perf_stats_lite.sql. If not specified, SQL LogScout will default to sql_perf_stats.sql.
 
 Stopping script `stop_collector.sh` accepts 1 argument
-- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL logscout will prompt you to choose an authentication mode.
+- Authentication Mode: Valid options are SQL, AD, or NONE. If not specified, SQL LogScout will prompt you to choose an authentication mode.
 
 **Examples**
 
-Start without passing any arguments, SQL logscout will ask you which Scenario and Authentication Mode to use.
+Start without passing any arguments, SQL LogScout will ask you which Scenario and Authentication Mode to use.
 
 ```
 sudo /bin/bash ./start_collector.sh
@@ -195,7 +197,7 @@ Passing Scenario and Authentication Mode to Start script.
 sudo /bin/bash ./start_collector.sh 'scenario_static_collect.scn' 'SQL'
 ```
 
-Passing Authentication Mode argument only to Start script, SQL logscout will ask you which Scenario to use.
+Passing Authentication Mode argument only to Start script, SQL LogScout will ask you which Scenario to use.
 
 ```
 sudo /bin/bash ./start_collector.sh '' 'AD'
@@ -221,17 +223,17 @@ however, If you have multiple instances running on the **same machine**, whether
 - to collect from all container instances, then adjust these setting to `COLLECT_HOST_SQL_INSTANCE=NO` and `COLLECT_CONTAINER=ALL`
 - To collect data from all instances, both host and container instances, use the default settings `COLLECT_HOST_SQL_INSTANCE=YES` and `COLLECT_CONTAINER=ALL`
 
-## Downloading and Executing SQL Logscout 
+## Downloading and Executing SQL LogScout 
 ### Downloading SQL Logscout
 - Navigate to releases using the following link https://github.com/microsoft/SQL_logscout/releases?q=Linux&expanded=true 
 - Expand Assests section
 - Download `sql_logscout_linux_<version>.tar` 
 
 
-### Preparing SQL Logscout for Execution   
+### Preparing SQL LogScout for Execution   
 1. you will need to copy `sql_logscout_linux_<version>.tar` into folder
 
-	**Note:** if you are capturing extended events the folder hierarchy needs r+x on the whole structure, Different Linux distributions do not allow x permissions on /home/user folder. for example run SQL logscout from /tmp or /var/tmp folders
+	**Note:** if you are capturing extended events the folder hierarchy needs r+x on the whole structure, Different Linux distributions do not allow x permissions on /home/user folder. for example run SQL LogScout from /tmp or /var/tmp folders
 	
 	```bash
 	drwxr-xr-x    2 root root    6 Aug  4 15:31 sql_logscout
@@ -240,7 +242,7 @@ however, If you have multiple instances running on the **same machine**, whether
 2. extract the content to /tmp/sql_logscout using `tar -xvf sql_logscout_linux_<version>.tar -C /`
 3. Make sure all *.sh has x attribute, if needed run `find . -type f -name "*.sh" -exec chmod a+x {} \;`
 
-### Starting SQL Logscout
+### Starting SQL LogScout
 
 **Note:** to allow AD Authentication collectors to collect kvno and klist of service accounts and ketytabs, you need to run the following before running SQL logscout.
 
@@ -254,8 +256,8 @@ Execute this command to start SQL logscout. It will guide you through Selecting 
 sudo /bin/bash ./start_collector.sh
 ``` 
 
-### Stopping SQL Logscout
-if you are using of the Scenarios that collects performace data we need to stop SQL logscout after reproducing the issue.
+### Stopping SQL LogScout
+if you are using of the Scenarios that collects performace data we need to stop SQL LogScout after reproducing the issue.
 
 Execute this command to stop SQL logscout. Please keep an eye on the screen throughout the execution for any login request.
 
@@ -273,15 +275,15 @@ Please upload the produced compressed output file to the engineer you are workin
 3. extract the content using `tar -xvf sql_logscout_linux_<version>.tar`
 4. Make sure all *.sh has x attribute using `find . -type f -name "*.sh" -exec chmod a+x {} \;`
 
-### Starting SQL Logscout 
+### Starting SQL LogScout 
 Execute this command to start SQL logscout. It will guide you through Selecting a scenario
 
 ```
 /bin/bash ./start_collector.sh
 ```
 
-### Stopping SQL Logscout
-if you are using of the Scenarios that collects performace data we need to stop SQL logscout after reproducing the issue.
+### Stopping SQL LogScout
+if you are using of the Scenarios that collects performace data we need to stop SQL LogScout after reproducing the issue.
 
 ```
 /bin/bash ./stop_collector.sh
